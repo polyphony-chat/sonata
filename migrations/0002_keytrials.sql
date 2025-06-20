@@ -1,11 +1,11 @@
 CREATE TABLE IF NOT EXISTS keytrials (
     id BIGSERIAL PRIMARY KEY,
-    for_id_cert UUID REFERENCES idcsr (id) NOT NULL,
+    for_id_cert BIGINT NOT NULL REFERENCES idcsr (id) ON DELETE CASCADE,
     expires TIMESTAMP NOT NULL,
     trial VARCHAR(256) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS keytrials_completed (
-    keytrial_id BIGINT PRIMARY KEY REFERENCES keytrials (id),
+    keytrial_id BIGINT PRIMARY KEY REFERENCES keytrials (id) ON DELETE CASCADE,
     signature TEXT UNIQUE NOT NULL
 );

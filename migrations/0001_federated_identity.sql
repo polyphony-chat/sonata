@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS algorithm_identifiers (
     id SERIAL PRIMARY KEY,
-    algorithm_identifier TEXT UNIQUE,
+    algorithm_identifier TEXT UNIQUE NOT NULL,
     common_name TEXT UNIQUE NULL,
     parameters TEXT NULL
 );
@@ -9,16 +9,17 @@ COMMENT ON TABLE algorithm_identifiers IS 'PKCS #10 Algorithm Identifiers for si
 
 CREATE TABLE IF NOT EXISTS public_keys (
     id BIGSERIAL PRIMARY KEY,
-    pubkey TEXT UNIQUE,
-    algorithm_identifier INT REFERENCES algorithm_identifiers (id) NOT NULL
+    uaid UUID NOT NULL REFERENCES actors (uaid),
+    pubkey TEXT UNIQUE NOT NULL,
+    UNIQUE (uaid, pubkey),
+    algorithm_identifier INT NOT NULL REFERENCES algorithm_identifiers (id) ON DELETE CASCADE
 );
 
 COMMENT ON TABLE public_keys IS 'Public keys of both actors, cached actors and home servers, including this home server.';
 
 CREATE TABLE IF NOT EXISTS subjects (
-    id BIGSERIAL PRIMARY KEY,
+    uaid UUID PRIMARY KEY REFERENCES actors (uaid),
     domain_components TEXT [] NOT NULL,
-    federation_id TEXT NULL,
     pem_encoded TEXT UNIQUE NOT NULL
 );
 
@@ -33,9 +34,9 @@ CREATE TABLE IF NOT EXISTS issuers (
 COMMENT ON TABLE issuers IS 'Issuers. Deduplicates issuer entries. Especially helpful, if the domain of this home server changes.';
 
 CREATE TABLE IF NOT EXISTS idcsr (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    public_key_id BIGINT UNIQUE REFERENCES public_keys (id) NOT NULL,
-    subject_info_id BIGINT REFERENCES subjects (id) NOT NULL,
+    id BIGSERIAL UNIQUE NOT NULL,
+    uaid UUID PRIMARY KEY REFERENCES actors (uaid) ON DELETE CASCADE,
+    public_key_id BIGINT UNIQUE NOT NULL REFERENCES public_keys (id) ON DELETE CASCADE,
     session_id VARCHAR(32) NOT NULL,
     valid_not_before TIMESTAMP NULL,
     valid_not_after TIMESTAMP NULL,
@@ -46,11 +47,12 @@ CREATE TABLE IF NOT EXISTS idcsr (
 COMMENT ON TABLE idcsr IS 'ID-CSRs.';
 
 CREATE TABLE IF NOT EXISTS idcert (
-    idcsr_id UUID PRIMARY KEY REFERENCES idcsr (id),
-    issuer_info_id BIGINT REFERENCES issuers (id) NOT NULL,
+    uaid UUID NOT NULL REFERENCES actors (uaid) ON DELETE CASCADE,
+    id_csr_id BIGINT UNIQUE NOT NULL REFERENCES idcsr (id),
+    issuer_info_id BIGINT NOT NULL REFERENCES issuers (id) ON DELETE CASCADE,
     valid_not_before TIMESTAMP NOT NULL,
     valid_not_after TIMESTAMP NOT NULL,
-    actor_signature_algorithm_identifier INT REFERENCES algorithm_identifiers (id),
+    actor_signature_algorithm_identifier INT NOT NULL REFERENCES algorithm_identifiers (id) ON DELETE CASCADE,
     home_server_signature TEXT UNIQUE NOT NULL,
     pem_encoded TEXT UNIQUE NOT NULL
 );
