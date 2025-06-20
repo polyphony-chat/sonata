@@ -21,3 +21,4 @@ sqlx = { version = "0.8.6", default-features = false, features = [
     "runtime-tokio-rustls",
 ] }
 poem = { version = "3.1.11", features = ["rustls", "hex", "compression"] }
+polyproto = { version = "0.10.0", features = ["serde"] }
