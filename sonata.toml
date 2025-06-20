@@ -1,0 +1,24 @@
+[api]
+enabled = true
+port = 3011
+host = "0.0.0.0"
+tls = false
+
+[gateway]
+enabled = true
+port = 3012
+host = "0.0.0.0"
+tls = false
+
+[general]
+# Accepted values: Trace, Debug, Info, Warn, Error, Silent
+log_level = "Trace"
+
+[general.database]
+max_connections = 20
+database = "sonata"
+username = "sonata"
+password = "sonata"
+port = 5432
+host = "localhost"
+tls = "prefer"
