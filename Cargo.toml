@@ -1,0 +1,22 @@
+[package]
+name = "sonata"
+version = "0.1.0"
+edition = "2024"
+license = "MPL-2.0"
+
+[dependencies]
+clap = { version = "4.5.40", features = ["derive"] }
+lazy_static = "1.5.0"
+log = "0.4.27"
+log4rs = "1.3.0"
+serde = { version = "1.0.219", features = ["derive"] }
+tokio = { version = "1.45.1", features = ["macros", "rt-multi-thread"] }
+toml = "0.8.23"
+sqlx = { version = "0.8.6", default-features = false, features = [
+    "migrate",
+    "postgres",
+    "macros",
+    "bigdecimal",
+    "json",
+    "runtime-tokio-rustls",
+] }
