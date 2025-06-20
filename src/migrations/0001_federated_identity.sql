@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS foreign_cached_idcerts (
     cache_not_valid_before TIMESTAMP NOT NULL,
     cache_not_valid_after TIMESTAMP NOT NULL,
     cache_signature TEXT UNIQUE NOT NULL,
-    signature_public_key BIGINT NULL REFERENCES public_keys (id) ON DELETE CASCADE,
+    home_server_signature_public_key BIGINT NULL REFERENCES public_keys (id) ON DELETE CASCADE,
     idcert_pem TEXT NULL
 );
 
