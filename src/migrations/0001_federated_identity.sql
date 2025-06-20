@@ -5,11 +5,15 @@ CREATE TABLE IF NOT EXISTS algorithm_identifiers (
     parameters TEXT NULL
 );
 
+COMMENT ON TABLE algorithm_identifiers IS 'PKCS #10 Algorithm Identifiers for signature and public key algorithms.';
+
 CREATE TABLE IF NOT EXISTS public_keys (
     id BIGSERIAL PRIMARY KEY,
     pubkey TEXT UNIQUE,
     algorithm_identifier INT REFERENCES algorithm_identifiers (id) NOT NULL
 );
+
+COMMENT ON TABLE public_keys IS 'Public keys of both actors, cached actors and home servers, including this home server.';
 
 CREATE TABLE IF NOT EXISTS subjects (
     id BIGSERIAL PRIMARY KEY,
@@ -18,11 +22,15 @@ CREATE TABLE IF NOT EXISTS subjects (
     pem_encoded TEXT UNIQUE NOT NULL
 );
 
+COMMENT ON TABLE subjects IS 'Subjects.';
+
 CREATE TABLE IF NOT EXISTS issuers (
     id BIGSERIAL PRIMARY KEY,
     domain_components TEXT [] NOT NULL,
     pem_encoded TEXT UNIQUE NOT NULL
 );
+
+COMMENT ON TABLE issuers IS 'Issuers. Deduplicates issuer entries. Especially helpful, if the domain of this home server changes.';
 
 CREATE TABLE IF NOT EXISTS idcsr (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -35,12 +43,30 @@ CREATE TABLE IF NOT EXISTS idcsr (
     pem_encoded TEXT UNIQUE NOT NULL
 );
 
+COMMENT ON TABLE idcsr IS 'ID-CSRs.';
+
 CREATE TABLE IF NOT EXISTS idcert (
     idcsr_id UUID PRIMARY KEY REFERENCES idcsr (id),
     issuer_info_id BIGINT REFERENCES issuers (id) NOT NULL,
     valid_not_before TIMESTAMP NOT NULL,
     valid_not_after TIMESTAMP NOT NULL,
-    signature_algorithm_identifier INT REFERENCES algorithm_identifiers (id),
-    signature TEXT UNIQUE NOT NULL,
+    actor_signature_algorithm_identifier INT REFERENCES algorithm_identifiers (id),
+    home_server_signature TEXT UNIQUE NOT NULL,
     pem_encoded TEXT UNIQUE NOT NULL
 );
+
+COMMENT ON TABLE idcert IS 'ID-Certs.';
+
+CREATE TABLE IF NOT EXISTS foreign_cached_idcerts (
+    federation_id TEXT NOT NULL,
+    session_id VARCHAR(32) NOT NULL,
+    PRIMARY KEY (federation_id, session_id),
+    invalidated_at TIMESTAMP NULL,
+    cache_not_valid_before TIMESTAMP NOT NULL,
+    cache_not_valid_after TIMESTAMP NOT NULL,
+    cache_signature TEXT UNIQUE NOT NULL,
+    signature_public_key BIGINT NULL REFERENCES public_keys (id) ON DELETE CASCADE,
+    idcert_pem TEXT NULL
+);
+
+COMMENT ON TABLE foreign_cached_idcerts IS 'ID-Certs that have been cached, but issued by other home servers.';
