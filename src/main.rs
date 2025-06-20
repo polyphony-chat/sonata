@@ -3,6 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #[tokio::main]
+#[cfg(not(tarpaulin))]
 async fn main() {
-	println!("Hello, world!");
+    println!("Hello, world!");
 }
