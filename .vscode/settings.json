@@ -6,9 +6,9 @@
 			"server": "localhost",
 			"port": 5432,
 			"driver": "PostgreSQL",
-			"database": "symfonia",
-			"username": "symfonia",
-			"password": "symfonia",
+			"database": "sonata",
+			"username": "sonata",
+			"password": "sonata",
 			"name": "localdb"
 		}
 	],
