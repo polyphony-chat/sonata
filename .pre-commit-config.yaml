@@ -1,0 +1,26 @@
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+    -   id: check-byte-order-marker
+    -   id: check-case-conflict
+    -   id: check-merge-conflict
+    -   id: check-symlinks
+    -   id: check-yaml
+    -   id: check-toml
+    -   id: check-json
+    -   id: end-of-file-fixer
+    -   id: mixed-line-ending
+    -   id: trailing-whitespace
+- repo: local
+  hooks:
+  - id: sqlx-prepare
+    name: prepare sqlx queries
+    description: Prepare SQLx offline mode with all features
+    language: rust
+    entry: cargo sqlx prepare
+    pass_filenames: false
+    always_run: true
+    types: [file, sql]
+    args: [--all, "--workspace", --, --all-features, --all-targets]
+    additional_dependencies: ['cli:sqlx-cli:0.8.6']

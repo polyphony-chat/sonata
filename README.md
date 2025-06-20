@@ -3,7 +3,7 @@
 A robust, performant implementation of a polyproto home server.
 
 > [!IMPORTANT]
-> 
+>
 > What is the difference between this project and [symfonia](https://github.com/polyphony-chat/symfonia)?
 
 > [!TIP]
