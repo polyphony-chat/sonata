@@ -34,9 +34,10 @@ CREATE TABLE IF NOT EXISTS issuers (
 COMMENT ON TABLE issuers IS 'Issuers. Deduplicates issuer entries. Especially helpful, if the domain of this home server changes.';
 
 CREATE TABLE IF NOT EXISTS idcsr (
-    id BIGSERIAL UNIQUE NOT NULL,
-    uaid UUID PRIMARY KEY REFERENCES actors (uaid) ON DELETE CASCADE,
-    public_key_id BIGINT UNIQUE NOT NULL REFERENCES public_keys (id) ON DELETE CASCADE,
+    serial_number UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    uaid UUID NOT NULL REFERENCES actors (uaid) ON DELETE CASCADE,
+    actor_public_key_id BIGINT UNIQUE NOT NULL REFERENCES public_keys (id) ON DELETE CASCADE,
+    actor_signature TEXT UNIQUE NOT NULL,
     session_id VARCHAR(32) NOT NULL,
     valid_not_before TIMESTAMP NULL,
     valid_not_after TIMESTAMP NULL,
@@ -47,17 +48,26 @@ CREATE TABLE IF NOT EXISTS idcsr (
 COMMENT ON TABLE idcsr IS 'ID-CSRs.';
 
 CREATE TABLE IF NOT EXISTS idcert (
-    uaid UUID NOT NULL REFERENCES actors (uaid) ON DELETE CASCADE,
-    id_csr_id BIGINT UNIQUE NOT NULL REFERENCES idcsr (id),
+    serial_number UUID PRIMARY KEY REFERENCES idcsr (serial_number),
     issuer_info_id BIGINT NOT NULL REFERENCES issuers (id) ON DELETE CASCADE,
     valid_not_before TIMESTAMP NOT NULL,
     valid_not_after TIMESTAMP NOT NULL,
-    actor_signature_algorithm_identifier INT NOT NULL REFERENCES algorithm_identifiers (id) ON DELETE CASCADE,
+    home_server_public_key_id INT NOT NULL REFERENCES public_keys (id) ON DELETE CASCADE,
     home_server_signature TEXT UNIQUE NOT NULL,
     pem_encoded TEXT UNIQUE NOT NULL
 );
 
 COMMENT ON TABLE idcert IS 'ID-Certs.';
+
+CREATE TABLE IF NOT EXISTS idcert_cached (
+    serial_number UUID PRIMARY KEY REFERENCES idcert (serial_number),
+    invalidated_at TIMESTAMP NULL,
+    cache_not_valid_before TIMESTAMP NOT NULL,
+    cache_not_valid_after TIMESTAMP NOT NULL,
+    cache_signature TEXT UNIQUE NOT NULL
+);
+
+COMMENT ON TABLE idcert_cached IS 'ID-Certs issued by this home server with additional cache information.';
 
 CREATE TABLE IF NOT EXISTS foreign_cached_idcerts (
     federation_id TEXT NOT NULL,

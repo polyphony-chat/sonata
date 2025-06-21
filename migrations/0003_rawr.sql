@@ -5,6 +5,8 @@ CREATE TABLE IF NOT EXISTS resources (
     CONSTRAINT link_or_bytes CHECK ((bytes IS NOT NULL AND link_to IS NULL) OR (bytes IS NULL AND link_to IS NOT NULL))
 );
 
+COMMENT ON TABLE resources IS 'RawR resources. Either has the server act as a cdn by directly storing and distributing the resource, or acts as a proxy, returning the link to the actual file.';
+
 CREATE TABLE IF NOT EXISTS resource_access_properties (
     id BIGINT PRIMARY KEY REFERENCES resources (id) ON DELETE CASCADE,
     private BOOLEAN NOT NULL,
