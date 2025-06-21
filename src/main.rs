@@ -8,6 +8,12 @@
  * A robust, performant polyproto home server.
  */
 
+use std::path::PathBuf;
+use std::str::FromStr;
+
+use clap::Parser;
+use log::{LevelFilter, debug, error, trace};
+
 mod api;
 pub(crate) mod cli;
 pub(crate) mod config;
@@ -20,12 +26,6 @@ pub(crate) type StdResult<T> = Result<T, StdError>;
 #[tokio::main]
 #[cfg(not(tarpaulin))]
 async fn main() -> StdResult<()> {
-    use std::path::PathBuf;
-    use std::str::FromStr;
-
-    use clap::Parser;
-    use log::{LevelFilter, debug, trace};
-
     use crate::cli::Args;
     use crate::config::SonataConfig;
     _ = Args::parse(); // Has to be done, else clap doesn't work correctly.
@@ -64,9 +64,27 @@ async fn main() -> StdResult<()> {
     };
 
     debug!("Parsing config at {config_location:?}...");
-    SonataConfig::init(&std::fs::read_to_string(config_location)?)?;
+    SonataConfig::init(&match std::fs::read_to_string(config_location) {
+        Ok(string) => string,
+        Err(_) => {
+            exit_with_log(
+                1,
+                &format!(
+                    r#"Couldn't find a file at "{}". Are you sure that the path is correct and that the file is accessible?"#,
+                    config_location.to_string_lossy()
+                ),
+            );
+        }
+    })?;
     debug!("Parsed config!");
     trace!("Read config {:#?}", SonataConfig::get_or_panic());
 
     Ok(())
+}
+
+/// Exits the program with a given status code, printing a log message beforehand.
+pub fn exit_with_log(code: i32, message: &str) -> ! {
+    error!("{message}");
+    error!("Exiting due to previous error.");
+    std::process::exit(code)
 }
