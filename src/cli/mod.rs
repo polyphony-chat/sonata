@@ -47,3 +47,20 @@ impl Args {
         CLI_ARGUMENTS.get().expect("cli arguments should have been set")
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[should_panic(expected = "cli arguments should have been set")]
+    fn test_get_or_panic_without_init() {
+        // This test should panic because CLI_ARGUMENTS hasn't been initialized
+        // Note: This test might fail if run after other tests that initialize CLI_ARGUMENTS
+        Args::get_or_panic();
+    }
+
+    // Note: Testing init_global() and command line parsing would require
+    // either mocking or integration tests, as they interact with global state
+    // and command line arguments
+}

@@ -127,11 +127,11 @@ impl TryFrom<&str> for TlsConfig {
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value.to_lowercase().as_str() {
             TLS_CONFIG_DISABLE => Ok(Self::Disable),
-            TLS_CONFIG_ALLOW => Ok(Self::Disable),
-            TLS_CONFIG_PREFER => Ok(Self::Disable),
-            TLS_CONFIG_REQUIRE => Ok(Self::Disable),
-            "verifyca" | TLS_CONFIG_VERIFY_CA | "verify-ca" => Ok(Self::Disable),
-            "verifyfull" | TLS_CONFIG_VERIFY_FULL | "verify-full" => Ok(Self::Disable),
+            TLS_CONFIG_ALLOW => Ok(Self::Allow),
+            TLS_CONFIG_PREFER => Ok(Self::Prefer),
+            TLS_CONFIG_REQUIRE => Ok(Self::Require),
+            "verifyca" | TLS_CONFIG_VERIFY_CA | "verify-ca" => Ok(Self::VerifyCa),
+            "verifyfull" | TLS_CONFIG_VERIFY_FULL | "verify-full" => Ok(Self::VerifyFull),
             other => Err(format!("{other} is not a valid TLS configuration value").into()),
         }
     }
@@ -155,5 +155,156 @@ impl std::str::FromStr for TlsConfig {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         TlsConfig::try_from(s)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_tls_config_try_from() {
+        // Test valid configurations
+        assert!(matches!(TlsConfig::try_from("disable"), Ok(TlsConfig::Disable)));
+        assert!(matches!(TlsConfig::try_from("allow"), Ok(TlsConfig::Allow)));
+        assert!(matches!(TlsConfig::try_from("prefer"), Ok(TlsConfig::Prefer)));
+        assert!(matches!(TlsConfig::try_from("require"), Ok(TlsConfig::Require)));
+        assert!(matches!(TlsConfig::try_from("verify_ca"), Ok(TlsConfig::VerifyCa)));
+        assert!(matches!(TlsConfig::try_from("verify-ca"), Ok(TlsConfig::VerifyCa)));
+        assert!(matches!(TlsConfig::try_from("verifyca"), Ok(TlsConfig::VerifyCa)));
+        assert!(matches!(TlsConfig::try_from("verify_full"), Ok(TlsConfig::VerifyFull)));
+        assert!(matches!(TlsConfig::try_from("verify-full"), Ok(TlsConfig::VerifyFull)));
+        assert!(matches!(TlsConfig::try_from("verifyfull"), Ok(TlsConfig::VerifyFull)));
+
+        // Test case insensitivity
+        assert!(matches!(TlsConfig::try_from("DISABLE"), Ok(TlsConfig::Disable)));
+        assert!(matches!(TlsConfig::try_from("DiSaBlE"), Ok(TlsConfig::Disable)));
+
+        // Test invalid configuration
+        assert!(TlsConfig::try_from("invalid").is_err());
+        assert!(TlsConfig::try_from("").is_err());
+        assert!(TlsConfig::try_from("random_value").is_err());
+    }
+
+    #[test]
+    fn test_tls_config_display() {
+        assert_eq!(TlsConfig::Disable.to_string(), "disable");
+        assert_eq!(TlsConfig::Allow.to_string(), "allow");
+        assert_eq!(TlsConfig::Prefer.to_string(), "prefer");
+        assert_eq!(TlsConfig::Require.to_string(), "require");
+        assert_eq!(TlsConfig::VerifyCa.to_string(), "verify_ca");
+        assert_eq!(TlsConfig::VerifyFull.to_string(), "verify_full");
+    }
+
+    #[test]
+    fn test_tls_config_from_str() {
+        // Test that FromStr trait works correctly (delegates to TryFrom)
+        assert!(matches!("disable".parse::<TlsConfig>(), Ok(TlsConfig::Disable)));
+        assert!(matches!("allow".parse::<TlsConfig>(), Ok(TlsConfig::Allow)));
+        assert!(matches!("prefer".parse::<TlsConfig>(), Ok(TlsConfig::Prefer)));
+        assert!(matches!("require".parse::<TlsConfig>(), Ok(TlsConfig::Require)));
+        assert!(matches!("verify_ca".parse::<TlsConfig>(), Ok(TlsConfig::VerifyCa)));
+        assert!(matches!("verify_full".parse::<TlsConfig>(), Ok(TlsConfig::VerifyFull)));
+        assert!("invalid".parse::<TlsConfig>().is_err());
+    }
+
+    #[test]
+    fn test_tls_config_default() {
+        // Test that the default is Require
+        assert!(matches!(TlsConfig::default(), TlsConfig::Require));
+    }
+
+    #[test]
+    fn test_api_config_deref() {
+        let config = ApiConfig {
+            config: ComponentConfig {
+                enabled: true,
+                port: 8080,
+                host: "localhost".to_owned(),
+                tls: true,
+            },
+        };
+
+        // Test that deref works correctly
+        assert!(config.enabled);
+        assert_eq!(config.port, 8080);
+        assert_eq!(config.host, "localhost");
+        assert!(config.tls);
+    }
+
+    #[test]
+    fn test_gateway_config_deref() {
+        let config = GatewayConfig {
+            config: ComponentConfig {
+                enabled: false,
+                port: 9090,
+                host: "0.0.0.0".to_owned(),
+                tls: false,
+            },
+        };
+
+        // Test that deref works correctly
+        assert!(!config.enabled);
+        assert_eq!(config.port, 9090);
+        assert_eq!(config.host, "0.0.0.0");
+        assert!(!config.tls);
+    }
+
+    #[test]
+    fn test_sonata_config_init() {
+        let toml_str = r#"
+[api]
+enabled = true
+port = 3011
+host = "0.0.0.0"
+tls = false
+
+[gateway]
+enabled = true
+port = 3012
+host = "0.0.0.0"
+tls = false
+
+[general]
+log_level = "Trace"
+
+[general.database]
+max_connections = 20
+database = "sonata"
+username = "sonata"
+password = "sonata"
+port = 5432
+host = "localhost"
+tls = "prefer"
+"#;
+
+        // First init should succeed
+        assert!(SonataConfig::init(toml_str).is_ok());
+
+        // Second init should fail (already initialized)
+        assert!(SonataConfig::init(toml_str).is_err());
+    }
+
+    #[test]
+    fn test_sonata_config_init_invalid_toml() {
+        let invalid_toml = "this is not valid toml";
+        assert!(SonataConfig::init(invalid_toml).is_err());
+    }
+
+    #[test]
+    fn test_sonata_config_init_missing_fields() {
+        let incomplete_toml = r#"
+[api]
+enabled = true
+# missing required fields
+"#;
+        assert!(SonataConfig::init(incomplete_toml).is_err());
+    }
+
+    #[test]
+    #[should_panic(expected = "config has not been initialized yet")]
+    fn test_sonata_config_get_or_panic_without_init() {
+        // Clear the global state if it exists
+        SonataConfig::get_or_panic();
     }
 }

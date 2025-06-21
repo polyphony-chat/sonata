@@ -44,3 +44,45 @@ impl Database {
         sqlx::migrate!().run(&self.pool).await.map_err(|e| e.into())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config::TlsConfig;
+
+    #[test]
+    fn test_database_debug() {
+        // We can't easily test the actual Database struct without a real connection,
+        // but we can test that it implements Debug
+        // This is a compile-time test to ensure Debug is implemented
+        fn assert_debug<T: std::fmt::Debug>() {}
+        assert_debug::<Database>();
+    }
+
+    #[test]
+    fn test_database_clone() {
+        // This is a compile-time test to ensure Clone is implemented
+        fn assert_clone<T: Clone>() {}
+        assert_clone::<Database>();
+    }
+
+    #[tokio::test]
+    async fn test_connect_with_config_invalid() {
+        let config = DatabaseConfig {
+            max_connections: 10,
+            database: "nonexistent".to_string(),
+            username: "invalid".to_string(),
+            password: "invalid".to_string(),
+            port: 5432,
+            host: "invalid_host".to_string(),
+            tls: TlsConfig::Disable,
+        };
+
+        // This should fail to connect
+        let result = Database::connect_with_config(&config).await;
+        assert!(result.is_err());
+    }
+
+    // Note: Testing actual database connections and migrations would require
+    // either a test database or mocking, which is typically done in integration tests
+}
