@@ -63,7 +63,7 @@ pub struct GeneralConfig {
 #[serde_as]
 #[derive(Deserialize, Debug)]
 pub struct DatabaseConfig {
-    pub max_connections: u16,
+    pub max_connections: u32,
     pub database: String,
     pub username: String,
     pub password: String,
