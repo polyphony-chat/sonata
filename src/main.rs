@@ -2,10 +2,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-pub(crate) mod api;
-mod cli;
+mod api;
+pub(crate) mod cli;
+pub(crate) mod config;
 pub(crate) mod database;
-pub(crate) mod gateway;
+mod gateway;
 
 pub(crate) type StdError = Box<dyn std::error::Error + 'static>;
 pub(crate) type StdResult<T> = Result<T, StdError>;
@@ -13,9 +14,10 @@ pub(crate) type StdResult<T> = Result<T, StdError>;
 #[tokio::main]
 #[cfg(not(tarpaulin))]
 async fn main() -> StdResult<()> {
-    use crate::cli::Args;
     use clap::Parser;
     use log::{LevelFilter, debug};
+
+    use crate::cli::Args;
     _ = Args::parse(); // Has to be done, else clap doesn't work correctly.
     Args::init_global()?;
     let verbose_level = match Args::get_or_panic().verbose {

@@ -36,20 +36,14 @@ pub struct Args {
 impl Args {
     pub fn init_global() -> StdResult<&'static Self> {
         let parsed = Args::try_parse()?;
-        CLI_ARGUMENTS
-            .set(parsed)
-            .map_err(|_| String::from("cli arguments already parsed"))?;
-        Ok(CLI_ARGUMENTS
-            .get()
-            .ok_or("cli arguments not set? this should never happen")?)
+        CLI_ARGUMENTS.set(parsed).map_err(|_| String::from("cli arguments already parsed"))?;
+        Ok(CLI_ARGUMENTS.get().ok_or("cli arguments not set? this should never happen")?)
     }
 
     /// Get a reference to the parsed CLI args. Will panic, if the CLI args have not been parsed using
     /// `Self::init()` prior to calling this function.
     #[allow(clippy::expect_used)]
     pub fn get_or_panic() -> &'static Self {
-        CLI_ARGUMENTS
-            .get()
-            .expect("cli arguments should have been set")
+        CLI_ARGUMENTS.get().expect("cli arguments should have been set")
     }
 }
