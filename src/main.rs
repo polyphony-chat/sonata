@@ -28,6 +28,7 @@ pub(crate) type StdResult<T> = Result<T, StdError>;
 async fn main() -> StdResult<()> {
     use crate::cli::Args;
     use crate::config::SonataConfig;
+    use crate::database::Database;
     _ = Args::parse(); // Has to be done, else clap doesn't work correctly.
     Args::init_global()?;
     let verbose_level = match Args::get_or_panic().verbose {
@@ -78,6 +79,19 @@ async fn main() -> StdResult<()> {
     })?;
     debug!("Parsed config!");
     trace!("Read config {:#?}", SonataConfig::get_or_panic());
+
+    debug!("Connecting to the database...");
+    let database =
+        match Database::connect_with_config(&SonataConfig::get_or_panic().general.database).await {
+            Ok(db) => db,
+            Err(e) => exit_with_log(3, &format!("Couldn't connect to the database: {e}")),
+        };
+    debug!("Connected to database!");
+    debug!("Applying migrations...");
+    match database.run_migrations().await {
+        Ok(_) => debug!("Migrations applied!"),
+        Err(e) => exit_with_log(4, &format!("Couldn't apply migrations: {e}")),
+    };
 
     Ok(())
 }
