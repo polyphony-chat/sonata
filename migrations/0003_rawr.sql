@@ -18,9 +18,9 @@ CREATE TABLE IF NOT EXISTS resource_access_properties (
     denylist TEXT [] NULL
 );
 
+-- Size attribute is not needed, as `pg_column_size()` returns the size of data in a table column.
 CREATE TABLE IF NOT EXISTS resource_information (
     id BIGINT UNIQUE REFERENCES resource_access_properties (id) ON DELETE CASCADE,
-    size BIGINT NOT NULL,
     resource_id TEXT NOT NULL,
     file_name TEXT NOT NULL,
     owner_uaid UUID NULL REFERENCES actors (uaid) ON DELETE CASCADE,
