@@ -38,4 +38,9 @@ impl Database {
             .await?;
         Ok(Self { pool })
     }
+
+    /// Applies the migrations.
+    pub(super) async fn run_migrations(&self) -> StdResult<()> {
+        sqlx::migrate!().run(&self.pool).await.map_err(|e| e.into())
+    }
 }
