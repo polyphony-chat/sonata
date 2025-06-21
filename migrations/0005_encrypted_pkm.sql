@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS encrypted_pkm (
     id BIGSERIAL PRIMARY KEY,
-    uaid UUID REFERENCES actor (uaid) ON DELETE CASCADE,
+    uaid UUID REFERENCES actors (uaid) ON DELETE CASCADE,
     key_data TEXT NOT NULL,
     encryption_algorithms VARCHAR(255) [5] NOT NULL,
     UNIQUE (uaid, key_data)
