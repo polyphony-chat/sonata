@@ -2153,6 +2153,7 @@ dependencies = [
  "polyproto",
  "rand 0.9.1",
  "serde",
+ "serde_with",
  "sqlx",
  "tokio",
  "toml",

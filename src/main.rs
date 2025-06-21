@@ -20,10 +20,14 @@ pub(crate) type StdResult<T> = Result<T, StdError>;
 #[tokio::main]
 #[cfg(not(tarpaulin))]
 async fn main() -> StdResult<()> {
+    use std::path::PathBuf;
+    use std::str::FromStr;
+
     use clap::Parser;
-    use log::{LevelFilter, debug};
+    use log::{LevelFilter, debug, trace};
 
     use crate::cli::Args;
+    use crate::config::SonataConfig;
     _ = Args::parse(); // Has to be done, else clap doesn't work correctly.
     Args::init_global()?;
     let verbose_level = match Args::get_or_panic().verbose {
@@ -54,5 +58,15 @@ async fn main() -> StdResult<()> {
         .filter(Some("sonata"), log_level)
         .try_init()?;
     debug!("Hello, world!");
+    let config_location = match &Args::get_or_panic().config {
+        Some(path) => path,
+        None => &PathBuf::from_str("sonata.toml")?,
+    };
+
+    debug!("Parsing config at {config_location:?}...");
+    SonataConfig::init(&std::fs::read_to_string(config_location)?)?;
+    debug!("Parsed config!");
+    trace!("Read config {:#?}", SonataConfig::get_or_panic());
+
     Ok(())
 }

@@ -24,6 +24,7 @@ poem = { version = "3.1.11", features = ["rustls", "hex", "compression"] }
 polyproto = { version = "0.10.0", features = ["serde"] }
 rand = "0.9.1"
 env_logger = { version = "0.11.8" }
+serde_with = "3.13.0"
 
 # We use `opt-level = "s"` as it significantly reduces binary size.
 # We could then use the `#[optimize(speed)]` attribute for spot optimizations.
