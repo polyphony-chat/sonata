@@ -41,3 +41,39 @@ incremental = true          # Improves re-compile times
 [profile.bench]
 codegen-units = 16          # Make compiling criterion faster (16 is the default, but profile.release sets it to 1)
 lto = "thin"                # Similarly, speed up linking by a ton
+
+[lints.rust]
+missing_debug_implementations = "warn"
+missing_docs = "warn"
+
+[lints.clippy]
+arithmetic_overflow = "warn"
+checked_conversions = "warn"
+cast_possible_truncation = "warn"
+cast_sign_loss = "warn"
+cast_possible_wrap = "deny"
+cast_precision_loss = "warn"
+integer_division = "warn"
+arithmetic_side_effects = "deny"
+unchecked_duration_subtraction = "warn"
+unwrap_used = "warn"
+expect_used = "warn"
+panicking_unwrap = "warn"
+option_env_unwrap = "warn"
+indexing_slicing = "warn"
+join_absolute_paths = "warn"
+serde_api_misuse = "warn"
+uninit_vec = "warn"
+transmute_int_to_char = "deny"
+transmute_int_to_float = "deny"
+transmute_ptr_to_ref = "deny"
+transmute_undefined_repr = "deny"
+string_to_string = "warn"
+str_to_string = "warn"
+unused_async = "warn"
+unused_self = "warn"
+used_underscore_binding = "warn"
+large_stack_arrays = "warn"
+large_types_passed_by_value = "warn"
+fallible_impl_from = "warn"
+must_use_candidate = "warn"
