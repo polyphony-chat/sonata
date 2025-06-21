@@ -2,7 +2,8 @@ CREATE TABLE IF NOT EXISTS actors (
     -- unique actor id
     uaid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     local_name TEXT UNIQUE NOT NULL,
-    deactivated BOOLEAN NOT NULL DEFAULT false
+    deactivated BOOLEAN NOT NULL DEFAULT false,
+    joined TIMESTAMP NOT NULL DEFAULT now()
 );
 
 COMMENT ON TABLE actors IS 'Actors from this home server.';
