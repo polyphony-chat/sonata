@@ -2,6 +2,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#![cfg_attr(tarpaulin, feature(coverage_attribute))]
+
 /*!
  * # sonata
  *
@@ -31,7 +33,7 @@ pub(crate) mod errors;
 pub(crate) use crate::errors::{StdError, StdResult};
 
 #[tokio::main]
-#[cfg(not(tarpaulin))]
+#[cfg_attr(tarpaulin, coverage(off))]
 async fn main() -> StdResult<()> {
     use crate::cli::Args;
     use crate::config::SonataConfig;
