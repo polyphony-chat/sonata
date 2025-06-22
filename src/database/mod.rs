@@ -8,6 +8,11 @@ use sqlx::postgres::{PgConnectOptions, PgPoolOptions};
 use crate::StdResult;
 use crate::config::DatabaseConfig;
 
+pub(crate) mod api_keys;
+pub(crate) mod models;
+
+pub(crate) use models::*;
+
 #[derive(Debug, Clone)]
 /// Main Database struct. Wrapper around [PgPool].
 pub(crate) struct Database {
