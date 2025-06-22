@@ -14,13 +14,20 @@ use std::str::FromStr;
 use clap::Parser;
 use log::{LevelFilter, debug, error, trace};
 
+/// Module housing the HTTP API routes and functionality
 mod api;
+/// Module hosting logic for the sonata CLI
 pub(crate) mod cli;
+/// Module for parsing and interpreting the sonata config file.
 pub(crate) mod config;
+/// Module defining PostgreSQL database entities as Rust structs and providing CRUD functionality
 pub(crate) mod database;
+/// Module housing the WebSocket Gateway logic
 mod gateway;
 
+/// Generic error type.
 pub(crate) type StdError = Box<dyn std::error::Error + 'static>;
+/// Generic result type.
 pub(crate) type StdResult<T> = Result<T, StdError>;
 
 #[tokio::main]

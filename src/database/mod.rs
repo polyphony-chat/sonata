@@ -9,7 +9,9 @@ use crate::StdResult;
 use crate::config::DatabaseConfig;
 
 #[derive(Debug, Clone)]
+/// Main Database struct. Wrapper around [PgPool].
 pub(crate) struct Database {
+    /// The underlying `sqlx` [PgPool].
     pub pool: PgPool,
 }
 
@@ -71,11 +73,11 @@ mod tests {
     async fn test_connect_with_config_invalid() {
         let config = DatabaseConfig {
             max_connections: 10,
-            database: "nonexistent".to_string(),
-            username: "invalid".to_string(),
-            password: "invalid".to_string(),
+            database: "nonexistent".to_owned(),
+            username: "invalid".to_owned(),
+            password: "invalid".to_owned(),
             port: 5432,
-            host: "invalid_host".to_string(),
+            host: "invalid_host".to_owned(),
             tls: TlsConfig::Disable,
         };
 

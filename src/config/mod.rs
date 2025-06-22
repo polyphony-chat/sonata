@@ -10,25 +10,38 @@ use serde_with::{DisplayFromStr, serde_as};
 
 use crate::{StdError, StdResult};
 
+/// Module-private "global" variable for storing the configuration values once they are parsed.
 static CONFIG: OnceLock<SonataConfig> = OnceLock::new();
 
+/// PostgreSQL: TLS Disabled
 const TLS_CONFIG_DISABLE: &str = "disable";
+/// PostgreSQL: TLS Allowed
 const TLS_CONFIG_ALLOW: &str = "allow";
+/// PostgreSQL: TLS Preferred
 const TLS_CONFIG_PREFER: &str = "prefer";
+/// PostgreSQL: TLS Required
 const TLS_CONFIG_REQUIRE: &str = "require";
+/// PostgreSQL: TLS Required with TLS certificate authority verification
 const TLS_CONFIG_VERIFY_CA: &str = "verify_ca";
+/// PostgreSQL: TLS Required with TLS certificate authority and subject verification
 const TLS_CONFIG_VERIFY_FULL: &str = "verify_full";
 
 #[derive(Deserialize, Debug)]
+/// The `sonata.toml` configuration file as Rust structs.
 pub struct SonataConfig {
+    /// API module configuration
     pub api: ApiConfig,
+    /// Gateway module configuration
     pub gateway: GatewayConfig,
+    /// General configuration, mostly consisting of [DatabaseConfig]
     pub general: GeneralConfig,
 }
 
 #[derive(Deserialize, Debug)]
+/// API Module configuration
 pub struct ApiConfig {
     #[serde(flatten)]
+    /// [ComponentConfig], holding the configuration values
     config: ComponentConfig,
 }
 
@@ -41,8 +54,10 @@ impl Deref for ApiConfig {
 }
 
 #[derive(Deserialize, Debug)]
+/// Gateway module configuration
 pub struct GatewayConfig {
     #[serde(flatten)]
+    /// [ComponentConfig], holding the configuration values
     config: ComponentConfig,
 }
 
@@ -55,34 +70,52 @@ impl Deref for GatewayConfig {
 }
 
 #[derive(Deserialize, Debug)]
+/// General configuration, consisting of database configuration
 pub struct GeneralConfig {
-    pub log_level: String,
+    /// Database configuration, including host, port, password, etc.
     pub database: DatabaseConfig,
 }
 
 #[serde_as]
 #[derive(Deserialize, Debug)]
 pub struct DatabaseConfig {
+    /// How many connections to allocate for this connection pool at maximum.
+    /// PostgreSQLs default value is 100.
     pub max_connections: u32,
+    /// The name of the database to connect to.
     pub database: String,
+    /// The username with which to connect to the database to.
     pub username: String,
+    /// The password with which to connect to the database to.
     pub password: String,
+    /// The port on which the database is listening on.
     pub port: u16,
+    /// The host URL/IP which the database is listening on.
     pub host: String,
     #[serde(default)]
     #[serde_as(as = "DisplayFromStr")]
+    /// TLS connection settings for the database.
     pub tls: TlsConfig,
 }
 
 #[derive(Deserialize, Debug)]
 pub struct ComponentConfig {
+    /// Whether this component is enabled.
     pub enabled: bool,
+    /// Which port to bind to.
     pub port: u16,
+    /// Which host address to bind to.
     pub host: String,
+    /// Whether TLS is enabled or not.
     pub tls: bool,
 }
 
 impl SonataConfig {
+    /// Initializes the [SonataConfig] by reading the configuration file, then storing it in a global
+    /// variable. After calling this function successfully, the configuration may be retrieved at any
+    /// time by calling `SonataConfig::get_or_panic()`.
+    ///
+    /// This function may only be called once. Subsequent calls of this function will yield an Error.
     pub fn init(input: &str) -> StdResult<()> {
         let cfg = toml::from_str::<Self>(input)?;
         CONFIG.set(cfg).map_err(|_| String::from("config global was already set"))?;
