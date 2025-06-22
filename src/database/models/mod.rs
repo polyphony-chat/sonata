@@ -3,7 +3,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use chrono::NaiveDateTime;
-use polyproto::certs::SessionId;
 use polyproto::types::x509_cert::SerialNumber;
 
 #[derive(sqlx::FromRow, sqlx::Type)]
