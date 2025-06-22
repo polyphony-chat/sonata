@@ -15,6 +15,7 @@ use std::str::FromStr;
 
 use clap::Parser;
 use log::{LevelFilter, debug, error, info, trace};
+use polyproto::key;
 use sqlx::query_scalar;
 
 /// Module housing the HTTP API routes and functionality
@@ -105,16 +106,16 @@ async fn main() -> StdResult<()> {
     };
     let keys_in_table =
         query_scalar!("SELECT COUNT(*) FROM api_keys").fetch_one(&database.pool).await?;
-    if let Some(number) = keys_in_table
-        && number >= 1
-    {
-    } else {
-        let api_key =
-            api_keys::add_api_key_to_database(&ApiKey::new_random(&mut rand::rng()), &database)
-                .await?;
-        info!("Added an API key to the database, since none were available: {api_key}");
-        info!("Save this API key, as it will not be shown again on future starts.");
-    }
+    match keys_in_table {
+        Some(0) | None => {
+            let api_key =
+                api_keys::add_api_key_to_database(&ApiKey::new_random(&mut rand::rng()), &database)
+                    .await?;
+            info!("Added an API key to the database, since none were available: {api_key}");
+            info!("Save this API key, as it will not be shown again on future starts.");
+        }
+        _ => (),
+    };
 
     Ok(())
 }

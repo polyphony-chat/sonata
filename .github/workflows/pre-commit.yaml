@@ -15,7 +15,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
+        with:
+          cache-all-crates: "true"
+      - name: Setup PostgreSQL for Linux/macOS/Windows
+        uses: ikalnytskyi/action-setup-postgres@v7
+        id: postgres
+        with:
+          postgres-version: 17
+      - name: "Install dependencies, prepare database"
+        env:
+          DATABASE_URL: ${{ steps.postgres.outputs.connection-uri }}
+        run: |
+          cargo install -f -q sqlx-cli
+          cargo sqlx migrate run
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
       - uses: pre-commit/action@576ff52938d158a24ac7e009dfa94b1455e7df99
+        env:
+          DATABASE_URL: ${{ steps.postgres.outputs.connection-uri }}
