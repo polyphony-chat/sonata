@@ -34,6 +34,7 @@ pub struct Args {
 }
 
 impl Args {
+    #[cfg_attr(coverage_nightly, coverage(off))]
     pub fn init_global() -> StdResult<&'static Self> {
         let parsed = Args::try_parse()?;
         CLI_ARGUMENTS.set(parsed).map_err(|_| String::from("cli arguments already parsed"))?;
