@@ -1,0 +1,10 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Generate Coverage",
+			"type": "shell",
+			"command": "cargo tarpaulin --all-features --avoid-cfg-tarpaulin --tests --verbose --skip-clean --out lcov --output-dir coverage"
+		}
+	]
+}
