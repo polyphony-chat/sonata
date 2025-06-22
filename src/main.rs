@@ -25,10 +25,10 @@ pub(crate) mod database;
 /// Module housing the WebSocket Gateway logic
 mod gateway;
 
-/// Generic error type.
-pub(crate) type StdError = Box<dyn std::error::Error + 'static>;
-/// Generic result type.
-pub(crate) type StdResult<T> = Result<T, StdError>;
+/// Finer-grained error types for sonata.
+pub(crate) mod errors;
+
+pub(crate) use crate::errors::{StdError, StdResult};
 
 #[tokio::main]
 #[cfg(not(tarpaulin))]

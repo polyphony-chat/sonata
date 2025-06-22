@@ -2177,6 +2177,7 @@ dependencies = [
  "serde",
  "serde_with",
  "sqlx",
+ "thiserror",
  "tokio",
  "tokio-test",
  "toml",
