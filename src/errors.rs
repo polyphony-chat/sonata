@@ -30,6 +30,7 @@ pub(crate) enum SonataDbError {
     StdError(StdError),
 }
 
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl ResponseError for SonataApiError {
     fn status(&self) -> poem::http::StatusCode {
         match self {
@@ -38,6 +39,7 @@ impl ResponseError for SonataApiError {
     }
 }
 
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl ResponseError for SonataDbError {
     fn status(&self) -> poem::http::StatusCode {
         match self {

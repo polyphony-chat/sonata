@@ -22,19 +22,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: "llvm-tools-preview"
       - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
         with:
           cache-all-crates: "true"
       - uses: taiki-e/install-action@7cb2cdb5024b2b45585f150af1ee02e24b87edd7
         with:
           tool: cargo-binstall
+      - name: Install dependencies
+        run: |
+          cargo binstall --no-confirm --force --only-signed cargo-llvm-cov cargo-nextest
       - name: Build, Test, Publish Coverage
         run: |
           if [ -n "${{ secrets.COVERALLS_REPO_TOKEN }}" ]; then
-            cargo binstall --no-confirm cargo-tarpaulin --force --only-signed
-            cargo +nightly tarpaulin --all-features --avoid-cfg-tarpaulin --tests --verbose --skip-clean --coveralls ${{ secrets.COVERALLS_REPO_TOKEN }} --timeout 120
+            cargo +nightly llvm-cov nextest --lcov --output-path coverage/lcov.info --branch --mcdc --all-targets --all-features --workspace
           else
             echo "Code Coverage step is skipped on PRs from forks."
-            cargo binstall --no-confirm --force --only-signed
             cargo nextest run --verbose --all-features
           fi
+      - name: Publish coverage to Coveralls.io
+        if: github.repository == 'polyphony-chat/sonata'
+        uses: coverallsapp/github-action@v2
+        with:
+          file: "coverage/lcov.info"
+          format: "lcov"
