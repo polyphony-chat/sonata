@@ -9,11 +9,13 @@ use clap::Parser;
 
 use crate::StdResult;
 
+/// Module-local global for storing CLI arg values after they have been parsed.
 static CLI_ARGUMENTS: OnceLock<Args> = OnceLock::new();
 
 #[derive(Debug, clap::Parser)]
 #[command(name = "sonata")]
 #[command(version, long_about = None)]
+/// `sonata` CLI args
 pub struct Args {
     #[arg(short, long, value_name = "FILE")]
     /// Path to a sonata config.toml file. If not specified, will use default values.
@@ -35,6 +37,8 @@ pub struct Args {
 
 impl Args {
     #[cfg_attr(coverage_nightly, coverage(off))]
+    /// Initialize the global Args storage by parsing the CLI arguments, then keeping them in memory.
+    /// Will only yield `Err` after the first call.
     pub fn init_global() -> StdResult<&'static Self> {
         let parsed = Args::try_parse()?;
         CLI_ARGUMENTS.set(parsed).map_err(|_| String::from("cli arguments already parsed"))?;
