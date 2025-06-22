@@ -18,7 +18,7 @@ pub(crate) struct Database {
 impl Database {
     /// Connect to the PostgreSQL Database using configuration options provided through [DatabaseConfig],
     /// which is most commonly derived by parsing a [SonataConfiguration].
-    #[cfg(not(tarpaulin))]
+    #[cfg_attr(coverage_nightly, coverage(off))]
     pub async fn connect_with_config(config: &DatabaseConfig) -> StdResult<Self> {
         let connect_options = PgConnectOptions::new()
             .host(&config.host)

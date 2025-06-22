@@ -13,5 +13,7 @@
 		}
 	],
 	"sqlfluff.dialect": "postgres",
-	"sqlfluff.excludeRules": ["LT05"]
+	"sqlfluff.excludeRules": ["LT05"],
+	"languageToolLinter.languageTool.disabledRules": "UPPERCASE_SENTENCE_START",
+	"languageToolLinter.languageTool.ignoredWordsInWorkspace": ["symfonia"]
 }

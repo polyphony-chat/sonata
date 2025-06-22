@@ -3,7 +3,7 @@ name: pre-commit
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: ["*"]
 
 # Auto-abort duplicate jobs (e.g. job being triggered again on push to open PR)
 concurrency:

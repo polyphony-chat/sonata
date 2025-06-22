@@ -4,7 +4,7 @@
 		{
 			"label": "Generate Coverage",
 			"type": "shell",
-			"command": "cargo tarpaulin --all-features --avoid-cfg-tarpaulin --tests --verbose --skip-clean --out lcov --output-dir coverage"
+			"command": "cargo +nightly llvm-cov nextest --lcov --output-path coverage/lcov.info --branch --mcdc --all-targets --all-features --workspace"
 		}
 	]
 }
