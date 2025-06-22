@@ -1,0 +1,7 @@
+{
+	"recommendations": [
+		"markis.code-coverage",
+		"rust-lang.rust-analyzer",
+		"swellaby.vscode-rust-test-adapter"
+	]
+}
