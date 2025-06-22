@@ -1,3 +1,8 @@
+[![Coverage Status](https://coveralls.io/repos/github/polyphony-chat/sonata/badge.svg?branch=main)](https://coveralls.io/github/polyphony-chat/sonata?branch=main)
+[![FAQ-shield]][FAQ]
+<img src="https://img.shields.io/static/v1?label=Status&message=Early%20Development&color=blue">
+[![Discord]][Discord-invite]
+
 # sonata
 
 A robust, performant implementation of a polyproto home server.
@@ -111,3 +116,9 @@ This project is licensed under the Mozilla Public License 2.0. See the [LICENSE]
 - **Website**: Visit [polyproto.org](https://polyproto.org)
 - **Email**: Contact us at [info@polyphony.chat](mailto:info@polyphony.chat)
 - **IRC**: See [our FAQ at the "IRC" section](https://github.com/polyphony-chat/.github/blob/main/FAQ.md#irc) for information on how to connect.
+
+
+[Discord]: https://dcbadge.vercel.app/api/server/m3FpcapGDD?style=flat
+[Discord-invite]: https://discord.com/invite/m3FpcapGDD
+[FAQ-shield]: https://img.shields.io/badge/Frequently_Asked_Questions_(FAQ)-ff62bd
+[FAQ]: https://github.com/polyphony-chat/.github/blob/main/FAQ.md
