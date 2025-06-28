@@ -34,7 +34,8 @@ CREATE TABLE IF NOT EXISTS issuers (
 COMMENT ON TABLE issuers IS 'Issuers. Deduplicates issuer entries. Especially helpful, if the domain of this home server changes.';
 
 CREATE TABLE IF NOT EXISTS idcsr (
-    serial_number UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id BIGSERIAL PRIMARY KEY,
+    serial_number NUMERIC(49, 0) UNIQUE NOT NULL,
     uaid UUID NOT NULL REFERENCES actors (uaid) ON DELETE CASCADE,
     actor_public_key_id BIGINT UNIQUE NOT NULL REFERENCES public_keys (id) ON DELETE CASCADE,
     actor_signature TEXT UNIQUE NOT NULL,
@@ -46,9 +47,10 @@ CREATE TABLE IF NOT EXISTS idcsr (
 );
 
 COMMENT ON TABLE idcsr IS 'ID-CSRs.';
+COMMENT ON COLUMN idcsr.serial_number IS 'To be generated via a (P)RNG safe for cryptographic use.';
 
 CREATE TABLE IF NOT EXISTS idcert (
-    serial_number UUID PRIMARY KEY REFERENCES idcsr (serial_number),
+    idcsr_id BIGINT PRIMARY KEY REFERENCES idcsr (id),
     issuer_info_id BIGINT NOT NULL REFERENCES issuers (id) ON DELETE CASCADE,
     valid_not_before TIMESTAMP NOT NULL,
     valid_not_after TIMESTAMP NOT NULL,
@@ -60,7 +62,7 @@ CREATE TABLE IF NOT EXISTS idcert (
 COMMENT ON TABLE idcert IS 'ID-Certs.';
 
 CREATE TABLE IF NOT EXISTS idcert_cached (
-    serial_number UUID PRIMARY KEY REFERENCES idcert (serial_number),
+    idcert_id BIGINT PRIMARY KEY REFERENCES idcert (idcsr_id),
     invalidated_at TIMESTAMP NULL,
     cache_not_valid_before TIMESTAMP NOT NULL,
     cache_not_valid_after TIMESTAMP NOT NULL,
