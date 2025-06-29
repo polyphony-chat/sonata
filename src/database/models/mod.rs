@@ -64,7 +64,7 @@ pub struct IdCsr {
     pub for_actor_uaid: Uuid,
     pub actor_public_key_id: i64,
     pub actor_signature: String,
-    pub session_id: SerialNumber,
+    pub session_id: String, // TODO make this serialnumba
     pub valid_not_before: NaiveDateTime,
     pub valid_not_after: NaiveDateTime,
     pub extensions: String,
