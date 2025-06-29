@@ -1651,9 +1651,11 @@ dependencies = [
 
 [[package]]
 name = "polyproto"
-version = "0.10.0"
-source = "git+https://github.com/polyphony-chat/polyproto-rs?branch=flori%2Fsqlx-support#541a95ace93fb30218f4f874f2ad49cdb6e8941f"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4c6bc5eff1de9661a3aea64a01e0f18ca9087d3749533a9d3b56a83bb8a5cccf"
 dependencies = [
+ "bigdecimal",
  "der",
  "futures-util",
  "hex",
@@ -1665,7 +1667,6 @@ dependencies = [
  "serde_json",
  "serde_with",
  "spki",
- "sqlx",
  "thiserror",
  "tokio",
  "tokio-tungstenite",
