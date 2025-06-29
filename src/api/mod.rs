@@ -15,6 +15,8 @@ use crate::database::Database;
 
 /// Admin-only functionality.
 pub(super) mod admin;
+/// Custom middlewares, such as authentication and active-user.
+pub(crate) mod middlewares;
 
 #[allow(clippy::expect_used)]
 /// Build the API [Route]s and start a `tokio::task`, which is a poem [Server] processing incoming

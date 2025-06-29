@@ -3,19 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use chrono::NaiveDateTime;
-use polyproto::types::x509_cert::SerialNumber;
-
-#[derive(sqlx::FromRow, sqlx::Type)]
-/// Represents a **Universally Unique Identifier** (UUID). From Wikipedia:
-///
-/// > A Universally Unique Identifier (UUID) is a 128-bit label used to uniquely identify objects in
-/// > computer systems. The term Globally Unique Identifier (GUID) is also used, mostly in Microsoft
-/// > systems. When generated according to the standard methods, UUIDs are, for practical purposes,
-/// > unique. Their uniqueness does not depend on a central registration authority or coordination
-/// > between the parties generating them, unlike most other numbering schemes. While the probability
-/// > that a UUID will be duplicated is not zero, it is generally considered close enough to zero to
-/// > be negligible.
-pub struct Uuid(String);
+use sqlx::types::Uuid;
 
 #[derive(sqlx::FromRow, sqlx::Type)]
 pub struct PemEncoded(String);
@@ -69,4 +57,13 @@ pub struct IdCsr {
     pub valid_not_after: NaiveDateTime,
     pub extensions: String,
     pub pem_encoded: String,
+}
+
+#[derive(sqlx::Decode, sqlx::Encode, sqlx::FromRow)]
+pub struct Invite {
+    pub invite_link_owner: Option<Uuid>,
+    pub usages_current: i32,
+    pub usages_maximum: i32,
+    pub invite_code: String,
+    pub invalid: bool,
 }

@@ -1,0 +1,49 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO invite_links\n        (\n            invite_link_owner,\n            usages_current, usages_maximum,\n            invite,\n            invalid\n        )\n        VALUES ($1, 0, $2, $3, $4)\n        RETURNING\n            invite_link_owner,\n            usages_current,\n            usages_maximum,\n            invite AS invite_code,\n            invalid",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "invite_link_owner",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "usages_current",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "usages_maximum",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "invite_code",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "invalid",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int4",
+        "Varchar",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      true,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "fb815f181457aa9277315f940f156ba1dab17f37d2950a4839eb942bf506bb5c"
+}

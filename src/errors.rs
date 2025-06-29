@@ -37,7 +37,7 @@ pub(crate) enum SonataDbError {
     StdError(StdError),
     #[error(transparent)]
     /// An [sqlx::Error]
-    Sqlx(sqlx::Error),
+    Sqlx(#[from] sqlx::Error),
 }
 
 #[cfg_attr(coverage_nightly, coverage(off))]

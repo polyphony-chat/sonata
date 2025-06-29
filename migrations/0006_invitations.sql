@@ -1,9 +1,11 @@
 CREATE TABLE IF NOT EXISTS invite_links (
     id BIGSERIAL PRIMARY KEY,
-    invite_link_owner UUID NOT NULL REFERENCES actors (uaid) ON DELETE CASCADE,
+    invite_link_owner UUID NULL REFERENCES actors (uaid) ON DELETE CASCADE,
     usages_current INT NOT NULL DEFAULT 0,
     usages_maximum INT NOT NULL DEFAULT 1,
-    invite VARCHAR(16) NOT NULL UNIQUE
+    invite VARCHAR(16) NOT NULL,
+    invalid BOOLEAN NOT NULL,
+    UNIQUE (invalid, invite)
 );
 
 CREATE TABLE IF NOT EXISTS invitations (
