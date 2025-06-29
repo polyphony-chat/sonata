@@ -74,6 +74,8 @@ impl Deref for GatewayConfig {
 pub struct GeneralConfig {
     /// Database configuration, including host, port, password, etc.
     pub database: DatabaseConfig,
+    /// The domain of this Sonata server instance.
+    pub server_domain: String,
 }
 
 #[serde_as]
