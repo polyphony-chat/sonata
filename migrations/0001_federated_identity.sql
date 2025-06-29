@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS idcert (
     issuer_info_id BIGINT NOT NULL REFERENCES issuers (id) ON DELETE CASCADE,
     valid_not_before TIMESTAMP NOT NULL,
     valid_not_after TIMESTAMP NOT NULL,
-    home_server_public_key_id INT NOT NULL REFERENCES public_keys (id) ON DELETE CASCADE,
+    home_server_public_key_id BIGINT NOT NULL REFERENCES public_keys (id) ON DELETE CASCADE,
     home_server_signature TEXT UNIQUE NOT NULL,
     pem_encoded TEXT UNIQUE NOT NULL
 );
