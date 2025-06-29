@@ -11,6 +11,7 @@ use crate::config::DatabaseConfig;
 pub(crate) mod api_keys;
 pub(crate) mod models;
 pub(crate) mod serial_number;
+pub(crate) mod tokens;
 
 pub(crate) use models::*;
 
