@@ -47,7 +47,19 @@ CREATE TABLE IF NOT EXISTS idcsr (
 );
 
 COMMENT ON TABLE idcsr IS 'ID-CSRs.';
-COMMENT ON COLUMN idcsr.serial_number IS 'To be generated via a (P)RNG safe for cryptographic use.';
+COMMENT ON COLUMN idcsr.serial_number IS 'To be generated via a CSPRNG. Serial numbers must not be used for cryptographic purposes';
+
+CREATE TABLE IF NOT EXISTS invalidated_certs (
+    id BIGSERIAL PRIMARY KEY,
+    serial_number NUMERIC(49, 0) UNIQUE NOT NULL REFERENCES idcsr (serial_number) ON DELETE CASCADE,
+    cert_id BIGINT UNIQUE NOT NULL REFERENCES idcsr (id) ON DELETE CASCADE,
+    invalidated_at TIMESTAMP NOT NULL
+);
+
+COMMENT ON TABLE invalidated_certs IS 'Stores information about all invalidated certificates that were created by this home server';
+
+ALTER TABLE idcsr ADD COLUMN invalidation_info BIGINT NULL;
+ALTER TABLE idcsr ADD UNIQUE (session_id, invalidation_info, valid_not_before, valid_not_after);
 
 CREATE TABLE IF NOT EXISTS idcert (
     idcsr_id BIGINT PRIMARY KEY REFERENCES idcsr (id),
@@ -63,7 +75,6 @@ COMMENT ON TABLE idcert IS 'ID-Certs.';
 
 CREATE TABLE IF NOT EXISTS idcert_cached (
     idcert_id BIGINT PRIMARY KEY REFERENCES idcert (idcsr_id),
-    invalidated_at TIMESTAMP NULL,
     cache_not_valid_before TIMESTAMP NOT NULL,
     cache_not_valid_after TIMESTAMP NOT NULL,
     cache_signature TEXT UNIQUE NOT NULL
