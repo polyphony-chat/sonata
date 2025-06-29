@@ -26,7 +26,7 @@ const TLS_CONFIG_VERIFY_CA: &str = "verify_ca";
 /// PostgreSQL: TLS Required with TLS certificate authority and subject verification
 const TLS_CONFIG_VERIFY_FULL: &str = "verify_full";
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 /// The `sonata.toml` configuration file as Rust structs.
 pub struct SonataConfig {
     /// API module configuration
@@ -37,7 +37,7 @@ pub struct SonataConfig {
     pub general: GeneralConfig,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 /// API Module configuration
 pub struct ApiConfig {
     #[serde(flatten)]
@@ -53,7 +53,7 @@ impl Deref for ApiConfig {
     }
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 /// Gateway module configuration
 pub struct GatewayConfig {
     #[serde(flatten)]
@@ -69,7 +69,7 @@ impl Deref for GatewayConfig {
     }
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 /// General configuration, consisting of database configuration
 pub struct GeneralConfig {
     /// Database configuration, including host, port, password, etc.
@@ -77,7 +77,7 @@ pub struct GeneralConfig {
 }
 
 #[serde_as]
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct DatabaseConfig {
     /// How many connections to allocate for this connection pool at maximum.
     /// PostgreSQLs default value is 100.
@@ -98,7 +98,7 @@ pub struct DatabaseConfig {
     pub tls: TlsConfig,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct ComponentConfig {
     /// Whether this component is enabled.
     pub enabled: bool,
@@ -129,7 +129,7 @@ impl SonataConfig {
     }
 }
 
-#[derive(Debug, Deserialize, Default)]
+#[derive(Debug, Deserialize, Default, Clone)]
 /// TLS configuration modes. Also called `sslconfig` by PostgreSQL. See <https://www.postgresql.org/docs/current/libpq-ssl.html#:~:text=32.1.%C2%A0SSL%20Mode-,descriptions,-sslmode>
 /// for the security implications of this choice.
 pub enum TlsConfig {

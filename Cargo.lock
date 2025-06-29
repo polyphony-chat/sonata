@@ -2180,6 +2180,7 @@ dependencies = [
  "polyproto",
  "rand 0.9.1",
  "serde",
+ "serde_json",
  "serde_with",
  "sqlx",
  "thiserror",

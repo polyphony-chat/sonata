@@ -117,6 +117,13 @@ async fn main() -> StdResult<()> {
         _ => (),
     };
 
+    let mut tasks =
+        vec![api::start_api(SonataConfig::get_or_panic().api.clone(), database.clone())];
+
+    for task in tasks.into_iter() {
+        task.await.unwrap()
+    }
+
     Ok(())
 }
 
