@@ -19,6 +19,7 @@ pub(super) mod admin;
 pub(crate) mod middlewares;
 
 #[allow(clippy::expect_used)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 /// Build the API [Route]s and start a `tokio::task`, which is a poem [Server] processing incoming
 /// HTTP API requests.
 pub(super) fn start_api(api_config: ApiConfig, db: Database) -> tokio::task::JoinHandle<()> {

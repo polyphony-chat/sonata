@@ -5,4 +5,5 @@
 use poem::{IntoResponse, handler};
 
 #[handler]
+#[cfg_attr(coverage_nightly, coverage(off))]
 pub(crate) async fn create_invite() -> impl IntoResponse {}

@@ -21,6 +21,13 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+      - uses: ikalnytskyi/action-setup-postgres@v6
+        with:
+          username: sonata
+          password: sljkdhfghjklsdfghjkldfsghjklsdfghjklsdfg
+          database: sonata
+          port: 5432
+        id: postgres
       - uses: dtolnay/rust-toolchain@nightly
         with:
           components: "llvm-tools-preview"
@@ -32,8 +39,14 @@ jobs:
           tool: cargo-nextest,cargo-binstall
       - name: Install dependencies
         run: |
-          cargo binstall --no-confirm --force --only-signed cargo-llvm-cov
+          cargo binstall --no-confirm --force --only-signed cargo-llvm-cov sqlx-cli
+      - name: Apply migrations
+        env:
+          DATABASE_URL: ${{ steps.postgres.outputs.connection-uri }}
+        run: cargo sqlx migrate run
       - name: Build, Test, Publish Coverage
+        env:
+          DATABASE_URL: ${{ steps.postgres.outputs.connection-uri }}
         run: |
           if [ -n "${{ secrets.COVERALLS_REPO_TOKEN }}" ]; then
             mkdir -p coverage
