@@ -3,11 +3,9 @@ use rand::TryRngCore;
 use sqlx::types::BigDecimal;
 use sqlx::{Decode, Encode};
 
-use crate::StdResult;
-
 // TODO: This could be in polyproto instead
 
-#[derive(Debug, Encode, Decode, Clone, PartialEq, Eq)]
+#[derive(Debug, Encode, Decode, Clone, PartialEq, Eq, Hash)]
 /// A serial number for a [polyproto::certs::IdCert].
 pub struct SerialNumber(BigDecimal);
 
