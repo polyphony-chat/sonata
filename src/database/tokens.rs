@@ -27,13 +27,47 @@ pub struct TokenStore {
 }
 
 impl TokenStore {
-    pub async fn get_token(
+    /// For a given [SerialNumber], get the hash of the **latest**, active auth token from the database,
+    /// if exists. As implied, will return `None` if there is no token in the database where
+    /// `valid_not_after` is smaller than the current system timestamp.
+    pub async fn get_valid_token(
+        &self,
         serial_number: &SerialNumber,
-    ) -> Result<Zeroizing<String>, SonataDbError> {
-        query!(
-            // THIS IS WRONG I GOTTA REDO IT
-            "SELECT id WHERE i.serial_number = $1 FROM idcsr as i LEFT JOIN idcert AS c ON i.id JOIN user_tokens AS u ON i.serial_number"
+    ) -> Result<Option<Zeroizing<String>>, SonataDbError> {
+        let record = query!(
+            r#"
+                WITH csr_id AS (
+                    -- Get the id from idcsr for the given numeric value
+                    SELECT id 
+                    FROM idcsr 
+                    WHERE serial_number = $1
+                ),
+                valid_cert AS (
+                    -- Check if this id exists in idcert
+                    SELECT c.id
+                    FROM csr_id c
+                    WHERE EXISTS (
+                        SELECT 1 
+                        FROM idcert ic 
+                        WHERE ic.idcsr_id = c.id
+                    )
+                )
+                -- Query user_tokens and select the token with the largest valid_not_after
+                SELECT ut.token_hash
+                FROM valid_cert vc
+                JOIN user_tokens ut ON ut.cert_id = vc.id
+                WHERE ut.valid_not_after >= NOW() -- only return non-expired tokens
+                ORDER BY ut.valid_not_after DESC NULLS LAST
+                LIMIT 1;
+            "#,
+            serial_number.as_bigdecimal()
         )
+        .fetch_optional(&self.p.pool)
+        .await?;
+        match record {
+            Some(record) => Ok(Some(record.token_hash.into())),
+            None => Ok(None),
+        }
     }
 }
 
@@ -55,10 +89,6 @@ pub fn hash_auth_token(auth_token: &str) -> StdResult<String> {
         .hash_password(auth_token.as_bytes(), &salt)
         .map_err(|e| e.to_string())?
         .to_string())
-}
-
-pub(crate) async fn valid_token_in_db(db: Database, token: &str) -> crate::errors::SonataDbError {
-    todo!()
 }
 
 #[cfg(test)]
