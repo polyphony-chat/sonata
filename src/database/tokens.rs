@@ -73,9 +73,7 @@ impl TokenStore {
         .fetch_optional(&self.p.pool)
         .await?;
         match record {
-            Some(record) => {
-                Ok(Some(TokenActorIdPair { token: record.token.into(), uaid: record.uaid }))
-            }
+            Some(record) => Ok(Some(TokenActorIdPair { token: record.token, uaid: record.uaid })),
             None => Ok(None),
         }
     }
