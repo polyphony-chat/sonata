@@ -1,3 +1,4 @@
+-- TODO: does this apply for foreign actors also?
 CREATE TABLE IF NOT EXISTS actors (
     -- unique actor id
     uaid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
