@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS api_keys (
 
 CREATE TABLE IF NOT EXISTS user_tokens (
     token_hash VARCHAR(255) PRIMARY KEY,
-    cert_id BIGINT NOT NULL REFERENCES idcsr (id),
+    cert_id BIGINT NOT NULL REFERENCES idcert (idcsr_id),
     uaid UUID NOT NULL REFERENCES actors (uaid) ON DELETE CASCADE,
     valid_not_after TIMESTAMP NULL
 );
