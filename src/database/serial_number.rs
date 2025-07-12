@@ -1,7 +1,7 @@
 use bigdecimal::num_bigint::BigUint;
 use rand::TryRngCore;
 use sqlx::types::BigDecimal;
-use sqlx::{Decode, Encode};
+use sqlx::{Decode, Encode, Postgres, Type};
 
 // TODO: This could be in polyproto instead
 
@@ -80,6 +80,11 @@ impl SerialNumber {
     fn normalize_first_byte(buf: &mut [u8; 20]) {
         buf[0] %= 128;
     }
+
+    /// Returns a reference to the inner [BigDecimal] field.
+    pub fn as_bigdecimal(&self) -> &BigDecimal {
+        &self.0
+    }
 }
 
 impl From<polyproto::types::x509_cert::SerialNumber> for SerialNumber {
@@ -91,6 +96,12 @@ impl From<polyproto::types::x509_cert::SerialNumber> for SerialNumber {
 impl From<SerialNumber> for polyproto::types::x509_cert::SerialNumber {
     fn from(value: SerialNumber) -> Self {
         Self::from_bytes_be(value.0.into_bigint_and_scale().0.to_bytes_be().1.as_slice()).unwrap()
+    }
+}
+
+impl Type<Postgres> for SerialNumber {
+    fn type_info() -> <Postgres as sqlx::Database>::TypeInfo {
+        BigDecimal::type_info()
     }
 }
 
