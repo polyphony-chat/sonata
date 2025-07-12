@@ -20,6 +20,7 @@ pub struct TokenStore {
 
 /// A pair of an API access token and a unique actor identifier (uaid), where the access token belongs
 /// to that actor. Does not distinguish between different clients/sessions.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TokenActorIdPair {
     /// API access token
     pub token: Zeroizing<String>,
