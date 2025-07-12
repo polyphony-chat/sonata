@@ -15,7 +15,6 @@ use std::str::FromStr;
 
 use clap::Parser;
 use log::{LevelFilter, debug, error, info, trace};
-use polyproto::key;
 use sqlx::query_scalar;
 
 /// Module housing the HTTP API routes and functionality
@@ -33,6 +32,7 @@ mod gateway;
 pub(crate) mod errors;
 
 use crate::database::api_keys::{self, ApiKey};
+use crate::database::tokens::TokenStore;
 pub(crate) use crate::errors::{StdError, StdResult};
 
 #[tokio::main]
@@ -117,8 +117,13 @@ async fn main() -> StdResult<()> {
         _ => (),
     };
 
-    let mut tasks =
-        vec![api::start_api(SonataConfig::get_or_panic().api.clone(), database.clone())];
+    let mut token_store = TokenStore::new(database.clone());
+
+    let mut tasks = vec![api::start_api(
+        SonataConfig::get_or_panic().api.clone(),
+        database.clone(),
+        token_store.clone(),
+    )];
 
     for task in tasks.into_iter() {
         task.await.unwrap()

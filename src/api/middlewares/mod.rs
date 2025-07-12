@@ -4,7 +4,8 @@
 
 use poem::http::StatusCode;
 use poem::{Endpoint, Middleware};
-use sqlx::PgPool;
+
+use crate::database::tokens::{TokenStore, hash_auth_token};
 
 pub struct AuthenticationMiddleware;
 
@@ -28,7 +29,8 @@ impl<E: Endpoint> Endpoint for AuthenticationMiddlewareImpl<E> {
             .header("Authorization")
             .ok_or(poem::error::Error::from_status(StatusCode::UNAUTHORIZED))?;
 
-        let db = req.data::<PgPool>().unwrap();
+        let token_store = req.data::<TokenStore>().unwrap();
+        let hashed_user_token = hash_auth_token(auth);
 
         self.ep.call(req).await
     }

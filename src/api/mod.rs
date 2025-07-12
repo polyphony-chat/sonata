@@ -12,6 +12,7 @@ use serde_json::json;
 
 use crate::config::ApiConfig;
 use crate::database::Database;
+use crate::database::tokens::TokenStore;
 
 /// Admin-only functionality.
 pub(super) mod admin;
@@ -22,7 +23,11 @@ pub(crate) mod middlewares;
 #[cfg_attr(coverage_nightly, coverage(off))]
 /// Build the API [Route]s and start a `tokio::task`, which is a poem [Server] processing incoming
 /// HTTP API requests.
-pub(super) fn start_api(api_config: ApiConfig, db: Database) -> tokio::task::JoinHandle<()> {
+pub(super) fn start_api(
+    api_config: ApiConfig,
+    db: Database,
+    token_store: TokenStore,
+) -> tokio::task::JoinHandle<()> {
     let routes = Route::new()
         .at("/healthz", healthz)
         .nest("/.p2/core/", setup_p2_core_routes())
@@ -37,7 +42,8 @@ pub(super) fn start_api(api_config: ApiConfig, db: Database) -> tokio::task::Joi
             Method::OPTIONS,
         ]))
         .catch_all_error(custom_error)
-        .data(db);
+        .data(db)
+        .data(token_store);
 
     let handle = tokio::task::spawn(async move {
         Server::new(TcpListener::bind((api_config.host.as_str().trim(), api_config.port)))
