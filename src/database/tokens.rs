@@ -1,9 +1,6 @@
-use std::collections::HashMap;
-
-use sqlx::{query, query_as};
+use sqlx::query;
 use zeroize::Zeroizing;
 
-use crate::StdResult;
 use crate::database::Database;
 use crate::database::serial_number::SerialNumber;
 use crate::errors::SonataDbError;
@@ -289,5 +286,138 @@ mod test {
 
         assert!(result.is_some());
         assert_eq!(result.unwrap().as_str(), "never_expires_token_hash");
+    }
+
+    // Tests for get_token_serial_number method
+    #[sqlx::test(fixtures("../../fixtures/token_serial_tests.sql"))]
+    async fn test_get_token_serial_number_valid_token_returns_correct_serial(pool: Pool<Postgres>) {
+        let db = Database { pool };
+        let token_store = TokenStore::new(db);
+
+        // Test with valid token hash for user 1
+        let result = token_store.get_token_serial_number("token_hash_user_1_a").await.unwrap();
+
+        assert!(result.is_some());
+        assert_eq!(
+            result.unwrap().as_bigdecimal(),
+            &BigDecimal::from_str("12345678901234567890").unwrap()
+        );
+    }
+
+    #[sqlx::test(fixtures("../../fixtures/token_serial_tests.sql"))]
+    async fn test_get_token_serial_number_multiple_tokens_same_user(pool: Pool<Postgres>) {
+        let db = Database { pool };
+        let token_store = TokenStore::new(db);
+
+        // Test with multiple valid token hashes for user 1 - all should return the same serial number
+        let result_a = token_store.get_token_serial_number("token_hash_user_1_a").await.unwrap();
+        let result_b = token_store.get_token_serial_number("token_hash_user_1_b").await.unwrap();
+
+        assert!(result_a.is_some());
+        assert!(result_b.is_some());
+
+        let serial_a = result_a.as_ref().unwrap();
+        let serial_b = result_b.as_ref().unwrap();
+
+        assert_eq!(serial_a, serial_b);
+        assert_eq!(
+            serial_a.as_bigdecimal(),
+            &BigDecimal::from_str("12345678901234567890").unwrap()
+        );
+    }
+
+    #[sqlx::test(fixtures("../../fixtures/token_serial_tests.sql"))]
+    async fn test_get_token_serial_number_different_users_different_serials(pool: Pool<Postgres>) {
+        let db = Database { pool };
+        let token_store = TokenStore::new(db);
+
+        // Test with valid token hashes for different users
+        let result_user_1 =
+            token_store.get_token_serial_number("token_hash_user_1_a").await.unwrap();
+        let result_user_2 =
+            token_store.get_token_serial_number("token_hash_user_2_a").await.unwrap();
+        let result_user_4 =
+            token_store.get_token_serial_number("token_hash_user_4_a").await.unwrap();
+
+        assert!(result_user_1.is_some());
+        assert!(result_user_2.is_some());
+        assert!(result_user_4.is_some());
+
+        let serial_1 = result_user_1.as_ref().unwrap();
+        let serial_2 = result_user_2.as_ref().unwrap();
+        let serial_4 = result_user_4.as_ref().unwrap();
+
+        // All should be different
+        assert_ne!(serial_1, serial_2);
+        assert_ne!(serial_1, serial_4);
+        assert_ne!(serial_2, serial_4);
+
+        // Check specific values
+        assert_eq!(
+            serial_1.as_bigdecimal(),
+            &BigDecimal::from_str("12345678901234567890").unwrap()
+        );
+        assert_eq!(
+            serial_2.as_bigdecimal(),
+            &BigDecimal::from_str("98765432109876543210").unwrap()
+        );
+        assert_eq!(
+            serial_4.as_bigdecimal(),
+            &BigDecimal::from_str("55555555555555555555").unwrap()
+        );
+    }
+
+    #[sqlx::test(fixtures("../../fixtures/token_serial_tests.sql"))]
+    async fn test_get_token_serial_number_nonexistent_token_returns_none(pool: Pool<Postgres>) {
+        let db = Database { pool };
+        let token_store = TokenStore::new(db);
+
+        // Test with token hash that doesn't exist
+        let result = token_store.get_token_serial_number("nonexistent_token_hash").await.unwrap();
+
+        assert!(result.is_none());
+    }
+
+    #[sqlx::test(fixtures("../../fixtures/token_serial_tests.sql"))]
+    async fn test_get_token_serial_number_expired_token_still_returns_serial(pool: Pool<Postgres>) {
+        let db = Database { pool };
+        let token_store = TokenStore::new(db);
+
+        // Test with expired token hash - should still return serial number
+        // (unlike get_valid_token which filters by expiration)
+        let result =
+            token_store.get_token_serial_number("expired_token_hash_user_4").await.unwrap();
+
+        assert!(result.is_some());
+        assert_eq!(
+            result.unwrap().as_bigdecimal(),
+            &BigDecimal::from_str("55555555555555555555").unwrap()
+        );
+    }
+
+    #[sqlx::test(fixtures("../../fixtures/token_serial_tests.sql"))]
+    async fn test_get_token_serial_number_empty_token_hash_returns_none(pool: Pool<Postgres>) {
+        let db = Database { pool };
+        let token_store = TokenStore::new(db);
+
+        // Test with empty token hash
+        let result = token_store.get_token_serial_number("").await.unwrap();
+
+        assert!(result.is_none());
+    }
+
+    #[sqlx::test(fixtures("../../fixtures/token_serial_tests.sql"))]
+    async fn test_get_token_serial_number_case_sensitive(pool: Pool<Postgres>) {
+        let db = Database { pool };
+        let token_store = TokenStore::new(db);
+
+        // Test case sensitivity - should be case sensitive
+        let result_lower =
+            token_store.get_token_serial_number("token_hash_user_1_a").await.unwrap();
+        let result_upper =
+            token_store.get_token_serial_number("TOKEN_HASH_USER_1_A").await.unwrap();
+
+        assert!(result_lower.is_some());
+        assert!(result_upper.is_none()); // Should not match due to case sensitivity
     }
 }
