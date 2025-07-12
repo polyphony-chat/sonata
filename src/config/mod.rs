@@ -287,31 +287,11 @@ mod tests {
 
     #[test]
     fn test_sonata_config_init() {
-        let toml_str = r#"
-[api]
-enabled = true
-port = 3011
-host = "0.0.0.0"
-tls = false
+        let toml_str =
+            &std::fs::read_to_string(format!("{}/sonata.toml", std::env!("CARGO_MANIFEST_DIR")))
+                .unwrap();
 
-[gateway]
-enabled = true
-port = 3012
-host = "0.0.0.0"
-tls = false
-
-[general]
-log_level = "Trace"
-
-[general.database]
-max_connections = 20
-database = "sonata"
-username = "sonata"
-password = "sonata"
-port = 5432
-host = "localhost"
-tls = "prefer"
-"#;
+        let _config: SonataConfig = toml::from_str(&toml_str).unwrap();
 
         // First init should succeed
         assert!(SonataConfig::init(toml_str).is_ok());

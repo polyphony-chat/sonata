@@ -10,6 +10,9 @@ port = 3012
 host = "0.0.0.0"
 tls = false
 
+[general]
+server_domain = "localhost"
+
 [general.database]
 max_connections = 20
 database = "sonata"
