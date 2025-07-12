@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO local_actors (uaid, local_name, deactivated, joined) VALUES\n            ('00000000-0000-0000-0000-000000000005', 'test_user_5', false, NOW())",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "24a05d1bf9ab87e03612173d26eabaaa6ac2562988ea31fb26a35886ed30bdb5"
+}

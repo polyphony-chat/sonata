@@ -9,7 +9,7 @@ COMMENT ON TABLE algorithm_identifiers IS 'PKCS #10 Algorithm Identifiers for si
 
 CREATE TABLE IF NOT EXISTS public_keys (
     id BIGSERIAL PRIMARY KEY,
-    uaid UUID NOT NULL REFERENCES actors (uaid),
+    uaid UUID NOT NULL REFERENCES local_actors (uaid),
     pubkey TEXT UNIQUE NOT NULL,
     UNIQUE (uaid, pubkey),
     algorithm_identifier INT NOT NULL REFERENCES algorithm_identifiers (id) ON DELETE CASCADE
@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS public_keys (
 COMMENT ON TABLE public_keys IS 'Public keys of both actors, cached actors and home servers, including this home server.';
 
 CREATE TABLE IF NOT EXISTS subjects (
-    uaid UUID PRIMARY KEY REFERENCES actors (uaid),
+    uaid UUID PRIMARY KEY REFERENCES local_actors (uaid),
     domain_components TEXT [] NOT NULL,
     pem_encoded TEXT UNIQUE NOT NULL
 );
@@ -36,7 +36,7 @@ COMMENT ON TABLE issuers IS 'Issuers. Deduplicates issuer entries. Especially he
 CREATE TABLE IF NOT EXISTS idcsr (
     id BIGSERIAL PRIMARY KEY,
     serial_number NUMERIC(49, 0) UNIQUE NOT NULL,
-    uaid UUID NOT NULL REFERENCES actors (uaid) ON DELETE CASCADE,
+    uaid UUID NOT NULL REFERENCES local_actors (uaid) ON DELETE CASCADE,
     actor_public_key_id BIGINT UNIQUE NOT NULL REFERENCES public_keys (id) ON DELETE CASCADE,
     actor_signature TEXT UNIQUE NOT NULL,
     session_id VARCHAR(32) NOT NULL,

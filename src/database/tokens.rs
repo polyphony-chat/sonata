@@ -220,7 +220,15 @@ mod test {
     async fn test_get_valid_token_excludes_expired_tokens(pool: Pool<Postgres>) {
         // Insert a user with only expired tokens (using user 5 to avoid conflict with base fixture)
         sqlx::query!(
-            "INSERT INTO actors (uaid, local_name, deactivated, joined) VALUES
+            "INSERT INTO actors (uaid, type) VALUES
+            ('00000000-0000-0000-0000-000000000005', 'local')"
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        sqlx::query!(
+            "INSERT INTO local_actors (uaid, local_name, deactivated, joined) VALUES
             ('00000000-0000-0000-0000-000000000005', 'test_user_5', false, NOW())"
         )
         .execute(&pool)
@@ -284,7 +292,15 @@ mod test {
     async fn test_get_valid_token_with_null_expiration(pool: Pool<Postgres>) {
         // Insert a user with a token that has NULL valid_not_after (using user 6 to avoid conflict)
         sqlx::query!(
-            "INSERT INTO actors (uaid, local_name, deactivated, joined) VALUES
+            "INSERT INTO actors (uaid, type) VALUES
+            ('00000000-0000-0000-0000-000000000006', 'local')"
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        sqlx::query!(
+            "INSERT INTO local_actors (uaid, local_name, deactivated, joined) VALUES
             ('00000000-0000-0000-0000-000000000006', 'test_user_6', false, NOW())"
         )
         .execute(&pool)

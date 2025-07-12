@@ -6,6 +6,6 @@ CREATE TYPE service AS (
 
 CREATE TABLE IF NOT EXISTS actor_service_mapping (
     id BIGSERIAL PRIMARY KEY,
-    uaid UUID UNIQUE REFERENCES actors (uaid) ON DELETE CASCADE,
+    uaid UUID UNIQUE REFERENCES local_actors (uaid) ON DELETE CASCADE,
     services SERVICE [] NULL
 );

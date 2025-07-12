@@ -7,7 +7,15 @@ INSERT INTO algorithm_identifiers (id, algorithm_identifier, common_name, parame
 (2, 'id-ecPublicKey', 'EC', NULL);
 
 -- Test actors (users 1-4 to support various test scenarios)
-INSERT INTO actors (uaid, local_name, deactivated, joined) VALUES
+-- First insert into actors table with type 'local'
+INSERT INTO actors (uaid, type) VALUES
+('00000000-0000-0000-0000-000000000001', 'local'),
+('00000000-0000-0000-0000-000000000002', 'local'),
+('00000000-0000-0000-0000-000000000003', 'local'),
+('00000000-0000-0000-0000-000000000004', 'local');
+
+-- Then insert into local_actors with the specific local actor data
+INSERT INTO local_actors (uaid, local_name, deactivated, joined) VALUES
 ('00000000-0000-0000-0000-000000000001', 'test_user_1', FALSE, NOW()),
 ('00000000-0000-0000-0000-000000000002', 'test_user_2', FALSE, NOW()),
 ('00000000-0000-0000-0000-000000000003', 'test_user_3', FALSE, NOW()),
