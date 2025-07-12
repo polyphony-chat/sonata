@@ -80,7 +80,7 @@ mod tests {
     #[tokio::test]
     async fn test_connect_with_config_invalid() {
         let config = DatabaseConfig {
-            max_connections: 10,
+            max_connections: 1,
             database: "nonexistent".to_owned(),
             username: "invalid".to_owned(),
             password: "invalid".to_owned(),

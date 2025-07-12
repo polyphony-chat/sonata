@@ -99,6 +99,12 @@ impl From<SerialNumber> for polyproto::types::x509_cert::SerialNumber {
     }
 }
 
+impl From<BigDecimal> for SerialNumber {
+    fn from(value: BigDecimal) -> Self {
+        Self(value)
+    }
+}
+
 impl Type<Postgres> for SerialNumber {
     fn type_info() -> <Postgres as sqlx::Database>::TypeInfo {
         BigDecimal::type_info()

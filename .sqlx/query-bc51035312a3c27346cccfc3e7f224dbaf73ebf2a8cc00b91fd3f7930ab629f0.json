@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO public_keys (id, uaid, pubkey, algorithm_identifier) VALUES\n            (5, '00000000-0000-0000-0000-000000000005', 'test_pubkey_5', 1)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "bc51035312a3c27346cccfc3e7f224dbaf73ebf2a8cc00b91fd3f7930ab629f0"
+}
