@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                WITH csr_id AS (\n                    -- Get the id from idcsr for the given numeric value\n                    SELECT id\n                    FROM idcsr\n                    WHERE serial_number = $1\n                ),\n                valid_cert AS (\n                    -- Check if this id exists in idcert\n                    SELECT c.id\n                    FROM csr_id c\n                    WHERE EXISTS (\n                        SELECT 1\n                        FROM idcert ic\n                        WHERE ic.idcsr_id = c.id\n                    )\n                )\n                -- Query user_tokens and select the token with the largest valid_not_after\n                SELECT ut.token_hash AS token, ut.uaid AS uaid\n                FROM valid_cert vc\n                JOIN user_tokens ut ON ut.cert_id = vc.id\n                WHERE (ut.valid_not_after >= NOW() OR ut.valid_not_after IS NULL) -- only return non-expired tokens\n                ORDER BY ut.valid_not_after DESC NULLS LAST\n                LIMIT 1;\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "token",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "uaid",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Numeric"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "744862e4bbc8659440a89aa55f865b90d32123813270e1abdcb69094e2a4b0e8"
+}

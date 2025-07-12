@@ -1,4 +1,5 @@
-use sqlx::query;
+use sqlx::types::Uuid;
+use sqlx::{query, query_as};
 use zeroize::Zeroizing;
 
 use crate::database::Database;
@@ -17,6 +18,15 @@ pub struct TokenStore {
     p: Database,
 }
 
+/// A pair of an API access token and a unique actor identifier (uaid), where the access token belongs
+/// to that actor. Does not distinguish between different clients/sessions.
+pub struct TokenActorIdPair {
+    /// API access token
+    pub token: Zeroizing<String>,
+    /// Unique Actor Identifier (uaid), unique per local actor.
+    pub uaid: Uuid,
+}
+
 impl TokenStore {
     /// Create a new TokenStore with the given database connection.
     pub fn new(database: Database) -> Self {
@@ -26,11 +36,12 @@ impl TokenStore {
     /// For a given [SerialNumber], get the hash of the **latest**, active auth token from the database,
     /// if exists. As implied, will return `None` if there is no token in the database where
     /// `valid_not_after` is smaller than the current system timestamp.
-    pub async fn get_valid_token(
+    pub async fn get_token_userid(
         &self,
         serial_number: &SerialNumber,
-    ) -> Result<Option<Zeroizing<String>>, SonataDbError> {
-        let record = query!(
+    ) -> Result<Option<TokenActorIdPair>, SonataDbError> {
+        let record = query_as!(
+            TokenActorIdPair,
             r#"
                 WITH csr_id AS (
                     -- Get the id from idcsr for the given numeric value
@@ -49,7 +60,7 @@ impl TokenStore {
                     )
                 )
                 -- Query user_tokens and select the token with the largest valid_not_after
-                SELECT ut.token_hash
+                SELECT ut.token_hash AS token, ut.uaid AS uaid
                 FROM valid_cert vc
                 JOIN user_tokens ut ON ut.cert_id = vc.id
                 WHERE (ut.valid_not_after >= NOW() OR ut.valid_not_after IS NULL) -- only return non-expired tokens
@@ -61,7 +72,9 @@ impl TokenStore {
         .fetch_optional(&self.p.pool)
         .await?;
         match record {
-            Some(record) => Ok(Some(record.token_hash.into())),
+            Some(record) => {
+                Ok(Some(TokenActorIdPair { token: record.token.into(), uaid: record.uaid }))
+            }
             None => Ok(None),
         }
     }
@@ -122,10 +135,10 @@ mod test {
         // Test user 1 who has a valid token
         let serial_number =
             SerialNumber::from(BigDecimal::from_str("12345678901234567890").unwrap());
-        let result = token_store.get_valid_token(&serial_number).await.unwrap();
+        let result = token_store.get_token_userid(&serial_number).await.unwrap();
 
         assert!(result.is_some());
-        assert_eq!(result.unwrap().as_str(), "valid_token_hash_1");
+        assert_eq!(result.unwrap().token.as_str(), "valid_token_hash_1");
     }
 
     #[sqlx::test(fixtures(
@@ -139,11 +152,11 @@ mod test {
         // Test user 2 who has multiple valid tokens - should return the one with latest expiration
         let serial_number =
             SerialNumber::from(BigDecimal::from_str("98765432109876543210").unwrap());
-        let result = token_store.get_valid_token(&serial_number).await.unwrap();
+        let result = token_store.get_token_userid(&serial_number).await.unwrap();
 
         assert!(result.is_some());
         // Should return the token with the longer expiration (2 hours, not 30 minutes)
-        assert_eq!(result.unwrap().as_str(), "valid_token_hash_2");
+        assert_eq!(result.unwrap().token.as_str(), "valid_token_hash_2");
     }
 
     #[sqlx::test(fixtures(
@@ -157,7 +170,7 @@ mod test {
         // Test user 3 who has no certificate (so no valid tokens)
         let serial_number =
             SerialNumber::from(BigDecimal::from_str("11111111111111111111").unwrap());
-        let result = token_store.get_valid_token(&serial_number).await.unwrap();
+        let result = token_store.get_token_userid(&serial_number).await.unwrap();
 
         assert!(result.is_none());
     }
@@ -173,7 +186,7 @@ mod test {
         // Test with a serial number that doesn't exist
         let serial_number =
             SerialNumber::from(BigDecimal::from_str("99999999999999999999").unwrap());
-        let result = token_store.get_valid_token(&serial_number).await.unwrap();
+        let result = token_store.get_token_userid(&serial_number).await.unwrap();
 
         assert!(result.is_none());
     }
@@ -237,7 +250,7 @@ mod test {
         let token_store = TokenStore::new(db);
         let serial_number =
             SerialNumber::from(BigDecimal::from_str("22222222222222222222").unwrap());
-        let result = token_store.get_valid_token(&serial_number).await.unwrap();
+        let result = token_store.get_token_userid(&serial_number).await.unwrap();
 
         assert!(result.is_none());
     }
@@ -300,10 +313,10 @@ mod test {
         let token_store = TokenStore::new(db);
         let serial_number =
             SerialNumber::from(BigDecimal::from_str("33333333333333333333").unwrap());
-        let result = token_store.get_valid_token(&serial_number).await.unwrap();
+        let result = token_store.get_token_userid(&serial_number).await.unwrap();
 
         assert!(result.is_some());
-        assert_eq!(result.unwrap().as_str(), "never_expires_token_hash");
+        assert_eq!(result.unwrap().token.as_str(), "never_expires_token_hash");
     }
 
     // Tests for get_token_serial_number method
