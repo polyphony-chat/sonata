@@ -111,7 +111,10 @@ mod test {
         // TODO complete eq check with blake3
     }
 
-    #[sqlx::test(fixtures("../../fixtures/test_setup.sql"))]
+    #[sqlx::test(fixtures(
+        "../../fixtures/tokens_base_fixture.sql",
+        "../../fixtures/token_validation_specific.sql"
+    ))]
     async fn test_get_valid_token_with_valid_token(pool: Pool<Postgres>) {
         let db = Database { pool };
         let token_store = TokenStore::new(db);
@@ -125,7 +128,10 @@ mod test {
         assert_eq!(result.unwrap().as_str(), "valid_token_hash_1");
     }
 
-    #[sqlx::test(fixtures("../../fixtures/test_setup.sql"))]
+    #[sqlx::test(fixtures(
+        "../../fixtures/tokens_base_fixture.sql",
+        "../../fixtures/token_validation_specific.sql"
+    ))]
     async fn test_get_valid_token_with_multiple_tokens_returns_latest(pool: Pool<Postgres>) {
         let db = Database { pool };
         let token_store = TokenStore::new(db);
@@ -140,7 +146,10 @@ mod test {
         assert_eq!(result.unwrap().as_str(), "valid_token_hash_2");
     }
 
-    #[sqlx::test(fixtures("../../fixtures/test_setup.sql"))]
+    #[sqlx::test(fixtures(
+        "../../fixtures/tokens_base_fixture.sql",
+        "../../fixtures/token_validation_specific.sql"
+    ))]
     async fn test_get_valid_token_with_no_cert_returns_none(pool: Pool<Postgres>) {
         let db = Database { pool };
         let token_store = TokenStore::new(db);
@@ -153,7 +162,10 @@ mod test {
         assert!(result.is_none());
     }
 
-    #[sqlx::test(fixtures("../../fixtures/test_setup.sql"))]
+    #[sqlx::test(fixtures(
+        "../../fixtures/tokens_base_fixture.sql",
+        "../../fixtures/token_validation_specific.sql"
+    ))]
     async fn test_get_valid_token_with_nonexistent_serial_returns_none(pool: Pool<Postgres>) {
         let db = Database { pool };
         let token_store = TokenStore::new(db);
@@ -166,70 +178,12 @@ mod test {
         assert!(result.is_none());
     }
 
-    #[sqlx::test(fixtures("../../fixtures/test_setup.sql"))]
+    #[sqlx::test(fixtures(
+        "../../fixtures/tokens_base_fixture.sql",
+        "../../fixtures/token_validation_specific.sql"
+    ))]
     async fn test_get_valid_token_excludes_expired_tokens(pool: Pool<Postgres>) {
-        // Insert a user with only expired tokens
-        sqlx::query!(
-            "INSERT INTO actors (uaid, local_name, deactivated, joined) VALUES
-            ('00000000-0000-0000-0000-000000000004', 'test_user_4', false, NOW())"
-        )
-        .execute(&pool)
-        .await
-        .unwrap();
-
-        sqlx::query!(
-            "INSERT INTO public_keys (id, uaid, pubkey, algorithm_identifier) VALUES
-            (4, '00000000-0000-0000-0000-000000000004', 'test_pubkey_4', 1)"
-        )
-        .execute(&pool)
-        .await
-        .unwrap();
-
-        sqlx::query!(
-            "INSERT INTO idcsr (
-                id, serial_number, uaid, actor_public_key_id, actor_signature,
-                session_id, valid_not_before, valid_not_after, extensions, pem_encoded
-            ) VALUES
-            (4, 22222222222222222222, '00000000-0000-0000-0000-000000000004', 4, 'test_signature_4',
-             'test_session_4', NOW() - INTERVAL '1 day', NOW() + INTERVAL '1 day', 'test_extensions_4', 'test_csr_pem_4')"
-        )
-        .execute(&pool)
-        .await
-        .unwrap();
-
-        sqlx::query!(
-            "INSERT INTO idcert (
-                idcsr_id, issuer_info_id, valid_not_before, valid_not_after,
-                home_server_public_key_id, home_server_signature, pem_encoded
-            ) VALUES
-            (4, 1, NOW() - INTERVAL '1 day', NOW() + INTERVAL '1 day', 1, 'test_home_server_sig_4', 'test_cert_pem_4')"
-        )
-        .execute(&pool)
-        .await
-        .unwrap();
-
-        // Insert only expired tokens
-        sqlx::query!(
-            "INSERT INTO user_tokens (token_hash, cert_id, uaid, valid_not_after) VALUES
-            ('expired_token_hash_4_1', 4, '00000000-0000-0000-0000-000000000004', NOW() - INTERVAL '2 hours'),
-            ('expired_token_hash_4_2', 4, '00000000-0000-0000-0000-000000000004', NOW() - INTERVAL '1 hour')"
-        )
-        .execute(&pool)
-        .await
-        .unwrap();
-
-        let db = Database { pool };
-        let token_store = TokenStore::new(db);
-        let serial_number =
-            SerialNumber::from(BigDecimal::from_str("22222222222222222222").unwrap());
-        let result = token_store.get_valid_token(&serial_number).await.unwrap();
-
-        assert!(result.is_none());
-    }
-
-    #[sqlx::test(fixtures("../../fixtures/test_setup.sql"))]
-    async fn test_get_valid_token_with_null_expiration(pool: Pool<Postgres>) {
-        // Insert a user with a token that has NULL valid_not_after
+        // Insert a user with only expired tokens (using user 5 to avoid conflict with base fixture)
         sqlx::query!(
             "INSERT INTO actors (uaid, local_name, deactivated, joined) VALUES
             ('00000000-0000-0000-0000-000000000005', 'test_user_5', false, NOW())"
@@ -251,7 +205,7 @@ mod test {
                 id, serial_number, uaid, actor_public_key_id, actor_signature,
                 session_id, valid_not_before, valid_not_after, extensions, pem_encoded
             ) VALUES
-            (5, 33333333333333333333, '00000000-0000-0000-0000-000000000005', 5, 'test_signature_5',
+            (5, 22222222222222222222, '00000000-0000-0000-0000-000000000005', 5, 'test_signature_5',
              'test_session_5', NOW() - INTERVAL '1 day', NOW() + INTERVAL '1 day', 'test_extensions_5', 'test_csr_pem_5')"
         )
         .execute(&pool)
@@ -269,10 +223,74 @@ mod test {
         .await
         .unwrap();
 
+        // Insert only expired tokens
+        sqlx::query!(
+            "INSERT INTO user_tokens (token_hash, cert_id, uaid, valid_not_after) VALUES
+            ('expired_token_hash_5_1', 5, '00000000-0000-0000-0000-000000000005', NOW() - INTERVAL '2 hours'),
+            ('expired_token_hash_5_2', 5, '00000000-0000-0000-0000-000000000005', NOW() - INTERVAL '1 hour')"
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        let db = Database { pool };
+        let token_store = TokenStore::new(db);
+        let serial_number =
+            SerialNumber::from(BigDecimal::from_str("22222222222222222222").unwrap());
+        let result = token_store.get_valid_token(&serial_number).await.unwrap();
+
+        assert!(result.is_none());
+    }
+
+    #[sqlx::test(fixtures(
+        "../../fixtures/tokens_base_fixture.sql",
+        "../../fixtures/token_validation_specific.sql"
+    ))]
+    async fn test_get_valid_token_with_null_expiration(pool: Pool<Postgres>) {
+        // Insert a user with a token that has NULL valid_not_after (using user 6 to avoid conflict)
+        sqlx::query!(
+            "INSERT INTO actors (uaid, local_name, deactivated, joined) VALUES
+            ('00000000-0000-0000-0000-000000000006', 'test_user_6', false, NOW())"
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        sqlx::query!(
+            "INSERT INTO public_keys (id, uaid, pubkey, algorithm_identifier) VALUES
+            (6, '00000000-0000-0000-0000-000000000006', 'test_pubkey_6', 1)"
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        sqlx::query!(
+            "INSERT INTO idcsr (
+                id, serial_number, uaid, actor_public_key_id, actor_signature,
+                session_id, valid_not_before, valid_not_after, extensions, pem_encoded
+            ) VALUES
+            (6, 33333333333333333333, '00000000-0000-0000-0000-000000000006', 6, 'test_signature_6',
+             'test_session_6', NOW() - INTERVAL '1 day', NOW() + INTERVAL '1 day', 'test_extensions_6', 'test_csr_pem_6')"
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        sqlx::query!(
+            "INSERT INTO idcert (
+                idcsr_id, issuer_info_id, valid_not_before, valid_not_after,
+                home_server_public_key_id, home_server_signature, pem_encoded
+            ) VALUES
+            (6, 1, NOW() - INTERVAL '1 day', NOW() + INTERVAL '1 day', 1, 'test_home_server_sig_6', 'test_cert_pem_6')"
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
         // Insert a token with NULL valid_not_after (should be treated as never expiring)
         sqlx::query!(
             "INSERT INTO user_tokens (token_hash, cert_id, uaid, valid_not_after) VALUES
-            ('never_expires_token_hash', 5, '00000000-0000-0000-0000-000000000005', NULL)"
+            ('never_expires_token_hash', 6, '00000000-0000-0000-0000-000000000006', NULL)"
         )
         .execute(&pool)
         .await
@@ -289,7 +307,10 @@ mod test {
     }
 
     // Tests for get_token_serial_number method
-    #[sqlx::test(fixtures("../../fixtures/token_serial_tests.sql"))]
+    #[sqlx::test(fixtures(
+        "../../fixtures/tokens_base_fixture.sql",
+        "../../fixtures/token_serial_lookup_specific.sql"
+    ))]
     async fn test_get_token_serial_number_valid_token_returns_correct_serial(pool: Pool<Postgres>) {
         let db = Database { pool };
         let token_store = TokenStore::new(db);
@@ -304,7 +325,10 @@ mod test {
         );
     }
 
-    #[sqlx::test(fixtures("../../fixtures/token_serial_tests.sql"))]
+    #[sqlx::test(fixtures(
+        "../../fixtures/tokens_base_fixture.sql",
+        "../../fixtures/token_serial_lookup_specific.sql"
+    ))]
     async fn test_get_token_serial_number_multiple_tokens_same_user(pool: Pool<Postgres>) {
         let db = Database { pool };
         let token_store = TokenStore::new(db);
@@ -326,7 +350,10 @@ mod test {
         );
     }
 
-    #[sqlx::test(fixtures("../../fixtures/token_serial_tests.sql"))]
+    #[sqlx::test(fixtures(
+        "../../fixtures/tokens_base_fixture.sql",
+        "../../fixtures/token_serial_lookup_specific.sql"
+    ))]
     async fn test_get_token_serial_number_different_users_different_serials(pool: Pool<Postgres>) {
         let db = Database { pool };
         let token_store = TokenStore::new(db);
@@ -367,7 +394,10 @@ mod test {
         );
     }
 
-    #[sqlx::test(fixtures("../../fixtures/token_serial_tests.sql"))]
+    #[sqlx::test(fixtures(
+        "../../fixtures/tokens_base_fixture.sql",
+        "../../fixtures/token_serial_lookup_specific.sql"
+    ))]
     async fn test_get_token_serial_number_nonexistent_token_returns_none(pool: Pool<Postgres>) {
         let db = Database { pool };
         let token_store = TokenStore::new(db);
@@ -378,7 +408,10 @@ mod test {
         assert!(result.is_none());
     }
 
-    #[sqlx::test(fixtures("../../fixtures/token_serial_tests.sql"))]
+    #[sqlx::test(fixtures(
+        "../../fixtures/tokens_base_fixture.sql",
+        "../../fixtures/token_serial_lookup_specific.sql"
+    ))]
     async fn test_get_token_serial_number_expired_token_still_returns_serial(pool: Pool<Postgres>) {
         let db = Database { pool };
         let token_store = TokenStore::new(db);
@@ -395,7 +428,10 @@ mod test {
         );
     }
 
-    #[sqlx::test(fixtures("../../fixtures/token_serial_tests.sql"))]
+    #[sqlx::test(fixtures(
+        "../../fixtures/tokens_base_fixture.sql",
+        "../../fixtures/token_serial_lookup_specific.sql"
+    ))]
     async fn test_get_token_serial_number_empty_token_hash_returns_none(pool: Pool<Postgres>) {
         let db = Database { pool };
         let token_store = TokenStore::new(db);
@@ -406,7 +442,10 @@ mod test {
         assert!(result.is_none());
     }
 
-    #[sqlx::test(fixtures("../../fixtures/token_serial_tests.sql"))]
+    #[sqlx::test(fixtures(
+        "../../fixtures/tokens_base_fixture.sql",
+        "../../fixtures/token_serial_lookup_specific.sql"
+    ))]
     async fn test_get_token_serial_number_case_sensitive(pool: Pool<Postgres>) {
         let db = Database { pool };
         let token_store = TokenStore::new(db);
