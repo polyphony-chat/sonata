@@ -117,9 +117,9 @@ async fn main() -> StdResult<()> {
         _ => (),
     };
 
-    let mut token_store = TokenStore::new(database.clone());
+    let token_store = TokenStore::new(database.clone());
 
-    let mut tasks = vec![api::start_api(
+    let tasks = vec![api::start_api(
         SonataConfig::get_or_panic().api.clone(),
         database.clone(),
         token_store.clone(),
