@@ -30,7 +30,7 @@ pub(crate) enum SonataGatewayError {
 }
 
 #[derive(Debug, thiserror::Error)]
-/// Error type for errors that concern the WebSocket Gateway.
+/// Error type for errors that concern the Database or Database connection.
 pub(crate) enum SonataDbError {
     #[error(transparent)]
     /// Generic error variant, supporting any type implementing [std::error::Error].
