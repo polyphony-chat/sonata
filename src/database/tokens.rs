@@ -120,7 +120,30 @@ mod test {
     fn eq_tokens() {
         let token = "hi!ilovetheworld";
         let hash = hash_auth_token(token);
-        // TODO complete eq check with blake3
+
+        let hash2 = hash_auth_token(token);
+        assert_eq!(hash, hash2, "Same token should produce identical hashes");
+
+        let different_token = "different_token";
+        let different_hash = hash_auth_token(different_token);
+        assert_ne!(hash, different_hash, "Different tokens should produce different hashes");
+
+        assert!(!hash.is_empty(), "Hash should not be empty");
+        assert_eq!(hash.len(), 64, "Blake3 hash should be 64 characters long (256 bits as hex)");
+        assert!(
+            hash.chars().all(|c| c.is_ascii_hexdigit()),
+            "Hash should contain only hex characters"
+        );
+
+        let empty_token = "";
+        let empty_hash = hash_auth_token(empty_token);
+        assert!(!empty_hash.is_empty(), "Even empty token should produce a valid hash");
+        assert_ne!(hash, empty_hash, "Empty token should produce different hash than non-empty");
+
+        let test_token = "test";
+        let test_hash = hash_auth_token(test_token);
+        let expected_hash = blake3::hash(b"test").to_string();
+        assert_eq!(test_hash, expected_hash, "Hash should match direct Blake3 computation");
     }
 
     #[sqlx::test(fixtures(
