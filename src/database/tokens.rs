@@ -1,9 +1,5 @@
 use std::collections::HashMap;
 
-use argon2::Argon2;
-use argon2::PasswordHasher;
-use argon2::password_hash::SaltString;
-use argon2::password_hash::rand_core::OsRng;
 use sqlx::{query, query_as};
 use zeroize::Zeroizing;
 
@@ -20,8 +16,6 @@ use crate::errors::SonataDbError;
 /// on all values (not keys!) of the HashMap, ensuring no token is left in memory
 /// after the application exits.
 pub struct TokenStore {
-    /// Inner store `s`
-    s: HashMap<SerialNumber, String>,
     /// An owned database connection, for convenience
     p: Database,
 }
@@ -29,7 +23,7 @@ pub struct TokenStore {
 impl TokenStore {
     /// Create a new TokenStore with the given database connection.
     pub fn new(database: Database) -> Self {
-        Self { s: HashMap::new(), p: database }
+        Self { p: database }
     }
 
     /// For a given [SerialNumber], get the hash of the **latest**, active auth token from the database,
@@ -74,26 +68,33 @@ impl TokenStore {
             None => Ok(None),
         }
     }
-}
 
-impl zeroize::Zeroize for TokenStore {
-    fn zeroize(&mut self) {
-        for (_serial_number, token) in self.s.iter_mut() {
-            token.zeroize();
-        }
+    /// Given a `token_hash`, find out the `serial_number` of the `IdCert` of the user, who this
+    /// `token_hash` is for.
+    pub async fn get_token_serial_number(
+        &self,
+        token_hash: &str,
+    ) -> Result<Option<SerialNumber>, SonataDbError> {
+        Ok(query!(
+            "SELECT idcsr.serial_number
+                FROM user_tokens
+                JOIN idcert ON user_tokens.cert_id = idcert.idcsr_id
+                JOIN idcsr ON idcert.idcsr_id = idcsr.id
+                WHERE user_tokens.token_hash = $1;
+            ",
+            token_hash
+        )
+        .fetch_optional(&self.p.pool)
+        .await?
+        .map(|record| record.serial_number.into()))
     }
 }
 
 impl zeroize::ZeroizeOnDrop for TokenStore {}
 
 /// DOCUMENTME
-pub fn hash_auth_token(auth_token: &str) -> StdResult<String> {
-    let argon_hasher = Argon2::default();
-    let salt = SaltString::generate(&mut OsRng);
-    Ok(argon_hasher
-        .hash_password(auth_token.as_bytes(), &salt)
-        .map_err(|e| e.to_string())?
-        .to_string())
+pub fn hash_auth_token(auth_token: &str) -> String {
+    blake3::hash(auth_token.as_bytes()).to_string()
 }
 
 #[cfg(test)]
@@ -101,7 +102,6 @@ pub fn hash_auth_token(auth_token: &str) -> StdResult<String> {
 mod test {
     use std::str::FromStr;
 
-    use argon2::{PasswordHash, PasswordVerifier};
     use bigdecimal::BigDecimal;
     use sqlx::{Pool, Postgres};
 
@@ -110,9 +110,8 @@ mod test {
     #[test]
     fn eq_tokens() {
         let token = "hi!ilovetheworld";
-        let hash = hash_auth_token(token).unwrap();
-        let pw_hash = PasswordHash::new(&hash).unwrap();
-        Argon2::default().verify_password(token.as_bytes(), &pw_hash).unwrap();
+        let hash = hash_auth_token(token);
+        // TODO complete eq check with blake3
     }
 
     #[sqlx::test(fixtures("../../fixtures/test_setup.sql"))]
