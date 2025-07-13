@@ -10,6 +10,7 @@ use crate::database::tokens::{TokenStore, hash_auth_token};
 /// [AuthenticationMiddlewareImpl]
 pub struct AuthenticationMiddleware;
 
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<E: Endpoint> Middleware<E> for AuthenticationMiddleware {
 	type Output = AuthenticationMiddlewareImpl<E>;
 
@@ -25,6 +26,7 @@ pub struct AuthenticationMiddlewareImpl<E> {
 	ep: E,
 }
 
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<E: Endpoint> Endpoint for AuthenticationMiddlewareImpl<E> {
 	type Output = E::Output;
 

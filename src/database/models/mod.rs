@@ -158,3 +158,23 @@ pub struct Invite {
 	pub invite_code: String,
 	pub invalid: bool,
 }
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn test_algorithm_identifier_creation() {
+		let algo_id = AlgorithmIdentifier {
+			id: 1,
+			algorithm_identifier_oid: "1.2.840.113549.1.1.11".to_string(),
+			common_name: Some("SHA256withRSA".to_string()),
+			parameters: Some("null".to_string()),
+		};
+
+		assert_eq!(algo_id.id, 1);
+		assert_eq!(algo_id.algorithm_identifier_oid, "1.2.840.113549.1.1.11");
+		assert_eq!(algo_id.common_name, Some("SHA256withRSA".to_string()));
+		assert_eq!(algo_id.parameters, Some("null".to_string()));
+	}
+}

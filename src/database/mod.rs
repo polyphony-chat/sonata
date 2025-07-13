@@ -96,7 +96,24 @@ mod tests {
 		assert!(result.is_err());
 	}
 
-	// Note: Testing actual database connections and migrations would require
-	// either a test database or mocking, which is typically done in integration
-	// tests
+	#[tokio::test]
+	async fn test_connect_with_config_zero_max_connections() {
+		let config = DatabaseConfig {
+			max_connections: 0, // Zero connections should cause a panic during pool creation
+			database: "test".to_owned(),
+			username: "test".to_owned(),
+			password: "test".to_owned(),
+			port: 5432,
+			host: "localhost".to_owned(),
+			tls: TlsConfig::Disable,
+		};
+
+		// This should panic or error due to zero max_connections
+		let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+			tokio::runtime::Runtime::new()
+				.unwrap()
+				.block_on(async { Database::connect_with_config(&config).await })
+		}));
+		assert!(result.is_err());
+	}
 }

@@ -62,6 +62,7 @@ pub(super) fn start_api(
 	handle
 }
 
+#[cfg_attr(coverage_nightly, coverage(off))]
 /// Catch-all fallback error.
 async fn custom_error(err: poem::Error) -> impl IntoResponse {
 	Json(json! ({
@@ -71,11 +72,13 @@ async fn custom_error(err: poem::Error) -> impl IntoResponse {
 	.with_status(err.status())
 }
 
+#[cfg_attr(coverage_nightly, coverage(off))]
 #[handler]
 fn healthz() -> impl IntoResponse {
 	Response::builder().status(StatusCode::OK).finish()
 }
 
+#[cfg_attr(coverage_nightly, coverage(off))]
 /// All routes under `/.p2/core/`.
 fn setup_p2_core_routes() -> Route {
 	Route::new()

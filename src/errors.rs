@@ -64,7 +64,7 @@ impl Error {
 	}
 }
 
-#[derive(Debug, Clone, Copy, Display, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Display, Serialize, Deserialize, PartialEq)]
 /// Standardized polyproto core error codes, giving a rough idea of what went
 /// wrong.
 pub enum Errcode {
@@ -191,7 +191,6 @@ pub(crate) enum SonataDbError {
 	Sqlx(#[from] sqlx::Error),
 }
 
-#[cfg_attr(coverage_nightly, coverage(off))]
 impl ResponseError for SonataApiError {
 	fn status(&self) -> poem::http::StatusCode {
 		match self {
@@ -212,12 +211,37 @@ impl IntoResponse for SonataApiError {
 	}
 }
 
-#[cfg_attr(coverage_nightly, coverage(off))]
 impl ResponseError for SonataDbError {
 	fn status(&self) -> poem::http::StatusCode {
 		match self {
 			SonataDbError::StdError(_) => StatusCode::INTERNAL_SERVER_ERROR,
 			SonataDbError::Sqlx(_) => StatusCode::INTERNAL_SERVER_ERROR,
 		}
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn test_error_serialization() {
+		let context = Context::new(Some("field"), Some("value"), Some("expected"));
+		let error = Error {
+			code: Errcode::IllegalInput,
+			message: "Test message".to_string(),
+			context: Some(context),
+		};
+
+		let serialized = serde_json::to_string(&error).unwrap();
+		let deserialized: Error = serde_json::from_str(&serialized).unwrap();
+
+		assert_eq!(deserialized.code, error.code);
+		assert_eq!(deserialized.message, error.message);
+		assert!(deserialized.context.is_some());
+		let ctx = deserialized.context.unwrap();
+		assert_eq!(ctx.field_name, "field");
+		assert_eq!(ctx.found, "value");
+		assert_eq!(ctx.expected, "expected");
 	}
 }

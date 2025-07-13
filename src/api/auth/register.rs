@@ -1,6 +1,6 @@
 use argon2::{
 	Argon2,
-	password_hash::{PasswordHash, PasswordHasher, SaltString, rand_core::OsRng},
+	password_hash::{PasswordHasher, SaltString, rand_core::OsRng},
 };
 use poem::{
 	IntoResponse, handler,
@@ -14,6 +14,7 @@ use crate::{
 	errors::{Context, Errcode, Error, SonataApiError},
 };
 
+#[cfg_attr(coverage_nightly, coverage(off))]
 #[handler]
 pub async fn register(
 	Json(payload): Json<RegisterSchema>,
