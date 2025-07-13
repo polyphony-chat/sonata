@@ -4,5 +4,5 @@ mod login;
 mod register;
 
 pub fn setup_routes() -> Route {
-    Route::new()
+	Route::new()
 }
