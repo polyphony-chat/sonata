@@ -101,7 +101,8 @@ impl TokenStore {
 
 impl zeroize::ZeroizeOnDrop for TokenStore {}
 
-/// DOCUMENTME
+/// Hashes an auth token using a deterministic hash function (currently: blake3), then returns the
+/// hash as a string.
 pub fn hash_auth_token(auth_token: &str) -> String {
     blake3::hash(auth_token.as_bytes()).to_string()
 }

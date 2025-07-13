@@ -186,7 +186,7 @@ impl std::fmt::Display for TlsConfig {
 }
 
 impl std::str::FromStr for TlsConfig {
-    type Err = Box<dyn std::error::Error + 'static>;
+    type Err = StdError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         TlsConfig::try_from(s)

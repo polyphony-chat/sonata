@@ -16,8 +16,11 @@ use crate::database::tokens::TokenStore;
 
 /// Admin-only functionality.
 pub(super) mod admin;
+/// Authentication functionality.
+mod auth;
 /// Custom middlewares, such as authentication and active-user.
 pub(crate) mod middlewares;
+pub(crate) mod models;
 
 #[allow(clippy::expect_used)]
 #[cfg_attr(coverage_nightly, coverage(off))]
