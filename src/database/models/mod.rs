@@ -22,6 +22,12 @@ pub struct Actor {
 	r#type: ActorType,
 }
 
+impl From<LocalActor> for Actor {
+	fn from(value: LocalActor) -> Self {
+		Self { unique_actor_identifier: value.unique_actor_identifier, r#type: ActorType::Local }
+	}
+}
+
 #[derive(sqlx::Decode, sqlx::Encode, sqlx::FromRow)]
 /// Actors from this home server.
 pub struct LocalActor {
