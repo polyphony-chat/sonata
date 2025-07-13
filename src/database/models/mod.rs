@@ -3,9 +3,12 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use chrono::NaiveDateTime;
-use sqlx::{query, types::Uuid};
+use sqlx::{query, query_as, types::Uuid};
 
-use crate::{database::Database, errors::SonataDbError};
+use crate::{
+	database::Database,
+	errors::{Context, Errcode, Error, SonataApiError, SonataDbError},
+};
 
 #[derive(sqlx::FromRow, sqlx::Type)]
 pub struct PemEncoded(String);
@@ -72,6 +75,35 @@ impl LocalActor {
 			is_deactivated: record.deactivated,
 			joined_at_timestamp: record.joined,
 		}))
+	}
+
+	/// Create a new [LocalActor] in the `local_actors` table of the [Database].
+	/// Before creating, checks, if a user specified by `local_name` already
+	/// exists in the table, returning an [Errcode::Duplicate]-type error, if
+	/// this is the case.
+	///
+	/// ## Errors
+	///
+	/// Other than the above, this method will error, if something is wrong with
+	/// the Database or Database connection.
+	pub async fn create(db: &Database, local_name: &str) -> Result<LocalActor, SonataApiError> {
+		if LocalActor::by_local_name(db, local_name).await?.is_some() {
+			Err(SonataApiError::Error(Error::new(
+				Errcode::Duplicate,
+				Some(Context::new(Some("local_name"), Some(local_name), None)),
+			)))
+		} else {
+			let uaid = query!("INSERT INTO actors (type) VALUES ('local') RETURNING uaid")
+				.fetch_one(&db.pool)
+				.await
+				.map_err(SonataDbError::Sqlx)?;
+			Ok(query_as!(
+			LocalActor,
+			"INSERT INTO local_actors (uaid, local_name) VALUES ($1, $2) RETURNING uaid AS unique_actor_identifier, local_name, deactivated AS is_deactivated, joined AS joined_at_timestamp",
+			uaid.uaid,
+			local_name
+		).fetch_one(&db.pool).await.map_err(SonataDbError::Sqlx)?)
+		}
 	}
 }
 

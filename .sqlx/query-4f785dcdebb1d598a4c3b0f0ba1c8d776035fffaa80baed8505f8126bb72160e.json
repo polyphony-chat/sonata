@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO actors (type) VALUES ('local') RETURNING uaid",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "uaid",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "4f785dcdebb1d598a4c3b0f0ba1c8d776035fffaa80baed8505f8126bb72160e"
+}
