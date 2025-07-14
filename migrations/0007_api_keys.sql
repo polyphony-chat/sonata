@@ -4,6 +4,8 @@ CREATE TABLE IF NOT EXISTS api_keys (
     CONSTRAINT token_length CHECK (length(token) >= 24 AND length(token) <= 255)
 );
 
+-- TODO: This should account for an "initial" token, like after registering successfully/logging in
+-- the first time, without having any idcerts. another table could help
 CREATE TABLE IF NOT EXISTS user_tokens (
     token_hash VARCHAR(255) PRIMARY KEY,
     cert_id BIGINT NOT NULL REFERENCES idcert (idcsr_id),

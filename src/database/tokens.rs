@@ -1,3 +1,4 @@
+use rand::distr::{Alphanumeric, SampleString};
 use sqlx::{query, query_as, types::Uuid};
 use zeroize::Zeroizing;
 
@@ -99,6 +100,38 @@ impl TokenStore {
 		.await?
 		.map(|record| record.serial_number.into()))
 	}
+
+	/// Generate a CSPRNG generated alphanumerical token, suitable for
+	/// authentication purposes, hash it, then upsert (insert or update, if
+	/// exists) the token hash into the database.
+	///
+	/// ## Returns
+	///
+	/// Returns the token hash, if the operation was successful.
+	///
+	/// ## Errors
+	///
+	/// - If the `uaid` does not refer to an existing actor in the `actors`
+	///   table
+	/// - If the `cert_id` is `Some()`, but does not refer to a cert that is
+	///   stored in the `idcert` table
+	/// - If the database connection is bad
+	pub async fn generate_upsert_token(
+		&self,
+		actor_id: &Uuid,
+		cert_id: Option<i64>,
+	) -> Result<String, SonataDbError> {
+		let token_hash = hash_auth_token(&Alphanumeric.sample_string(&mut rand::rng(), 96));
+		query!(
+			"INSERT INTO user_tokens (token_hash, uaid, cert_id) VALUES ($1, $2, $3) ON CONFLICT (cert_id, uaid) DO UPDATE SET token_hash = EXCLUDED.token_hash",
+			&token_hash,
+			actor_id,
+			cert_id
+		)
+		.execute(&self.p.pool)
+		.await?;
+		Ok(token_hash)
+	}
 }
 
 impl zeroize::ZeroizeOnDrop for TokenStore {}
@@ -174,14 +207,11 @@ mod test {
 		let db = Database { pool };
 		let token_store = TokenStore::new(db);
 
-		// Test user 2 who has multiple valid tokens - should return the one with latest
-		// expiration
 		let serial_number =
 			SerialNumber::from(BigDecimal::from_str("98765432109876543210").unwrap());
 		let result = token_store.get_token_userid(&serial_number).await.unwrap();
 
 		assert!(result.is_some());
-		// Should return the token with the longer expiration (2 hours, not 30 minutes)
 		assert_eq!(result.unwrap().token.as_str(), "valid_token_hash_2");
 	}
 
@@ -391,8 +421,6 @@ mod test {
 		let db = Database { pool };
 		let token_store = TokenStore::new(db);
 
-		// Test with multiple valid token hashes for user 1 - all should return the same
-		// serial number
 		let result_a = token_store.get_token_serial_number("token_hash_user_1_a").await.unwrap();
 		let result_b = token_store.get_token_serial_number("token_hash_user_1_b").await.unwrap();
 
@@ -475,8 +503,6 @@ mod test {
 		let db = Database { pool };
 		let token_store = TokenStore::new(db);
 
-		// Test with expired token hash - should still return serial number
-		// (unlike get_valid_token which filters by expiration)
 		let result =
 			token_store.get_token_serial_number("expired_token_hash_user_4").await.unwrap();
 

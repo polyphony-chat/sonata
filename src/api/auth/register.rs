@@ -36,6 +36,7 @@ pub async fn register(
 		.hash_password(password.as_bytes(), &salt)
 		.map_err(|_| Error::new(Errcode::Internal, None).into_api_error())?;
 	// TODO: Check if registration is currently in whitelist mode
-	// TODO: Store user etc. in DB
+	let new_user =
+		LocalActor::create(db, &payload.local_name, password_hash.serialize().as_str()).await?;
 	Ok(poem::error::Error::from_status(StatusCode::NOT_IMPLEMENTED).into_response())
 }
