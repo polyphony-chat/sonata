@@ -86,7 +86,11 @@ impl LocalActor {
 	///
 	/// Other than the above, this method will error, if something is wrong with
 	/// the Database or Database connection.
-	pub async fn create(db: &Database, local_name: &str) -> Result<LocalActor, SonataApiError> {
+	pub async fn create(
+		db: &Database,
+		local_name: &str,
+		password_hash: &str,
+	) -> Result<LocalActor, SonataApiError> {
 		if LocalActor::by_local_name(db, local_name).await?.is_some() {
 			Err(SonataApiError::Error(Error::new(
 				Errcode::Duplicate,
@@ -99,9 +103,10 @@ impl LocalActor {
 				.map_err(SonataDbError::Sqlx)?;
 			Ok(query_as!(
 			LocalActor,
-			"INSERT INTO local_actors (uaid, local_name) VALUES ($1, $2) RETURNING uaid AS unique_actor_identifier, local_name, deactivated AS is_deactivated, joined AS joined_at_timestamp",
+			"INSERT INTO local_actors (uaid, local_name, password_hash) VALUES ($1, $2, $3) RETURNING uaid AS unique_actor_identifier, local_name, deactivated AS is_deactivated, joined AS joined_at_timestamp",
 			uaid.uaid,
-			local_name
+			local_name,
+			password_hash
 		).fetch_one(&db.pool).await.map_err(SonataDbError::Sqlx)?)
 		}
 	}
@@ -264,7 +269,7 @@ mod tests {
 	async fn test_create_new_user_success(pool: Pool<Postgres>) {
 		let db = Database { pool };
 
-		let result = LocalActor::create(&db, "new_user").await;
+		let result = LocalActor::create(&db, "new_user", "hash").await;
 		assert!(result.is_ok());
 
 		let actor = result.unwrap();
@@ -283,7 +288,7 @@ mod tests {
 	async fn test_create_duplicate_user_returns_error(pool: Pool<Postgres>) {
 		let db = Database { pool };
 
-		let result = LocalActor::create(&db, "alice").await;
+		let result = LocalActor::create(&db, "alice", "hash").await;
 		assert!(result.is_err());
 
 		match result.unwrap_err() {
@@ -302,7 +307,7 @@ mod tests {
 	async fn test_create_duplicate_deactivated_user_returns_error(pool: Pool<Postgres>) {
 		let db = Database { pool };
 
-		let result = LocalActor::create(&db, "deactivated_user").await;
+		let result = LocalActor::create(&db, "deactivated_user", "hash").await;
 		assert!(result.is_err());
 
 		match result.unwrap_err() {
@@ -321,7 +326,7 @@ mod tests {
 	async fn test_create_user_with_special_characters(pool: Pool<Postgres>) {
 		let db = Database { pool };
 
-		let result = LocalActor::create(&db, "user.with-special_chars").await;
+		let result = LocalActor::create(&db, "user.with-special_chars", "hash").await;
 		assert!(result.is_ok());
 
 		let actor = result.unwrap();
@@ -336,7 +341,7 @@ mod tests {
 	async fn test_create_user_with_empty_name(pool: Pool<Postgres>) {
 		let db = Database { pool };
 
-		let result = LocalActor::create(&db, "").await;
+		let result = LocalActor::create(&db, "", "hash").await;
 		assert!(result.is_ok());
 
 		let actor = result.unwrap();
@@ -351,9 +356,9 @@ mod tests {
 	async fn test_create_multiple_users_have_different_uuids(pool: Pool<Postgres>) {
 		let db = Database { pool };
 
-		let user1 = LocalActor::create(&db, "user1").await.unwrap();
-		let user2 = LocalActor::create(&db, "user2").await.unwrap();
-		let user3 = LocalActor::create(&db, "user3").await.unwrap();
+		let user1 = LocalActor::create(&db, "user1", "hash").await.unwrap();
+		let user2 = LocalActor::create(&db, "user2", "hash").await.unwrap();
+		let user3 = LocalActor::create(&db, "user3", "hash").await.unwrap();
 
 		assert_ne!(user1.unique_actor_identifier, user2.unique_actor_identifier);
 		assert_ne!(user1.unique_actor_identifier, user3.unique_actor_identifier);
@@ -369,7 +374,7 @@ mod tests {
 		let db = Database { pool };
 
 		let before_create = chrono::Utc::now().naive_utc();
-		let actor = LocalActor::create(&db, "timestamped_user").await.unwrap();
+		let actor = LocalActor::create(&db, "timestamped_user", "hash").await.unwrap();
 		let after_create = chrono::Utc::now().naive_utc();
 
 		assert!(actor.joined_at_timestamp >= before_create);

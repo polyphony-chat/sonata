@@ -233,8 +233,8 @@ mod test {
 		.unwrap();
 
 		sqlx::query!(
-			"INSERT INTO local_actors (uaid, local_name, deactivated, joined) VALUES
-            ('00000000-0000-0000-0000-000000000005', 'test_user_5', false, NOW())"
+			"INSERT INTO local_actors (uaid, local_name, deactivated, joined, password_hash) VALUES
+            ('00000000-0000-0000-0000-000000000005', 'test_user_5', false, NOW(), 'hash')"
 		)
 		.execute(&pool)
 		.await
@@ -306,8 +306,8 @@ mod test {
 		.unwrap();
 
 		sqlx::query!(
-			"INSERT INTO local_actors (uaid, local_name, deactivated, joined) VALUES
-            ('00000000-0000-0000-0000-000000000006', 'test_user_6', false, NOW())"
+			"INSERT INTO local_actors (uaid, local_name, deactivated, joined, password_hash) VALUES
+            ('00000000-0000-0000-0000-000000000006', 'test_user_6', false, NOW(), 'hash')"
 		)
 		.execute(&pool)
 		.await

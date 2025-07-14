@@ -16,12 +16,12 @@ INSERT INTO actors (uaid, type) VALUES
 ('00000000-0000-0000-0000-000000000005', 'local');
 
 -- Then insert into local_actors with specific test data
-INSERT INTO local_actors (uaid, local_name, deactivated, joined) VALUES
+INSERT INTO local_actors (uaid, local_name, deactivated, joined, password_hash) VALUES
 -- Active users
-('00000000-0000-0000-0000-000000000001', 'alice', FALSE, '2023-01-01 12:00:00'),
-('00000000-0000-0000-0000-000000000002', 'bob', FALSE, '2023-01-02 12:00:00'),
-('00000000-0000-0000-0000-000000000003', 'charlie', FALSE, '2023-01-03 12:00:00'),
+('00000000-0000-0000-0000-000000000001', 'alice', FALSE, '2023-01-01 12:00:00', 'hash'),
+('00000000-0000-0000-0000-000000000002', 'bob', FALSE, '2023-01-02 12:00:00', 'hash'),
+('00000000-0000-0000-0000-000000000003', 'charlie', FALSE, '2023-01-03 12:00:00', 'hash'),
 -- Deactivated user
-('00000000-0000-0000-0000-000000000004', 'deactivated_user', TRUE, '2023-01-04 12:00:00'),
+('00000000-0000-0000-0000-000000000004', 'deactivated_user', TRUE, '2023-01-04 12:00:00', 'hash'),
 -- User with special characters in name
-('00000000-0000-0000-0000-000000000005', 'user_with_underscores', FALSE, '2023-01-05 12:00:00');
+('00000000-0000-0000-0000-000000000005', 'user_with_underscores', FALSE, '2023-01-05 12:00:00', 'hash');

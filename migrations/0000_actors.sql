@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS local_actors (
     -- unique actor id
     uaid UUID PRIMARY KEY REFERENCES actors (uaid),
     local_name TEXT UNIQUE NOT NULL,
+    password_hash VARCHAR(128) NOT NULL,
     deactivated BOOLEAN NOT NULL DEFAULT false,
     joined TIMESTAMP NOT NULL DEFAULT now()
 );

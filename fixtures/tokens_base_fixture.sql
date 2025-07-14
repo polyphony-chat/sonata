@@ -15,11 +15,11 @@ INSERT INTO actors (uaid, type) VALUES
 ('00000000-0000-0000-0000-000000000004', 'local');
 
 -- Then insert into local_actors with the specific local actor data
-INSERT INTO local_actors (uaid, local_name, deactivated, joined) VALUES
-('00000000-0000-0000-0000-000000000001', 'test_user_1', FALSE, NOW()),
-('00000000-0000-0000-0000-000000000002', 'test_user_2', FALSE, NOW()),
-('00000000-0000-0000-0000-000000000003', 'test_user_3', FALSE, NOW()),
-('00000000-0000-0000-0000-000000000004', 'test_user_4', FALSE, NOW());
+INSERT INTO local_actors (uaid, local_name, deactivated, joined, password_hash) VALUES
+('00000000-0000-0000-0000-000000000001', 'test_user_1', FALSE, NOW(), 'hash'),
+('00000000-0000-0000-0000-000000000002', 'test_user_2', FALSE, NOW(), 'hash'),
+('00000000-0000-0000-0000-000000000003', 'test_user_3', FALSE, NOW(), 'hash'),
+('00000000-0000-0000-0000-000000000004', 'test_user_4', FALSE, NOW(), 'hash');
 
 -- Test public keys (corresponding to all test users)
 INSERT INTO public_keys (id, uaid, pubkey, algorithm_identifier) VALUES
