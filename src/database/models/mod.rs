@@ -31,7 +31,7 @@ impl From<LocalActor> for Actor {
 	}
 }
 
-#[derive(sqlx::Decode, sqlx::Encode, sqlx::FromRow)]
+#[derive(Debug, sqlx::Decode, sqlx::Encode, sqlx::FromRow)]
 /// Actors from this home server.
 pub struct LocalActor {
 	/// The unique actor identifer. Does not change, even if the `local_name`
@@ -161,6 +161,8 @@ pub struct Invite {
 
 #[cfg(test)]
 mod tests {
+	use sqlx::{Pool, Postgres};
+
 	use super::*;
 
 	#[test]
@@ -176,5 +178,201 @@ mod tests {
 		assert_eq!(algo_id.algorithm_identifier_oid, "1.2.840.113549.1.1.11");
 		assert_eq!(algo_id.common_name, Some("SHA256withRSA".to_string()));
 		assert_eq!(algo_id.parameters, Some("null".to_string()));
+	}
+
+	#[sqlx::test(fixtures("../../../fixtures/local_actor_tests.sql"))]
+	async fn test_by_local_name_finds_existing_user(pool: Pool<Postgres>) {
+		let db = Database { pool };
+
+		let result = LocalActor::by_local_name(&db, "alice").await.unwrap();
+		assert!(result.is_some());
+
+		let actor = result.unwrap();
+		assert_eq!(actor.local_name, "alice");
+		assert_eq!(
+			actor.unique_actor_identifier.to_string(),
+			"00000000-0000-0000-0000-000000000001"
+		);
+		assert!(!actor.is_deactivated);
+	}
+
+	#[sqlx::test(fixtures("../../../fixtures/local_actor_tests.sql"))]
+	async fn test_by_local_name_finds_deactivated_user(pool: Pool<Postgres>) {
+		let db = Database { pool };
+
+		let result = LocalActor::by_local_name(&db, "deactivated_user").await.unwrap();
+		assert!(result.is_some());
+
+		let actor = result.unwrap();
+		assert_eq!(actor.local_name, "deactivated_user");
+		assert_eq!(
+			actor.unique_actor_identifier.to_string(),
+			"00000000-0000-0000-0000-000000000004"
+		);
+		assert!(actor.is_deactivated);
+	}
+
+	#[sqlx::test(fixtures("../../../fixtures/local_actor_tests.sql"))]
+	async fn test_by_local_name_finds_user_with_special_characters(pool: Pool<Postgres>) {
+		let db = Database { pool };
+
+		let result = LocalActor::by_local_name(&db, "user_with_underscores").await.unwrap();
+		assert!(result.is_some());
+
+		let actor = result.unwrap();
+		assert_eq!(actor.local_name, "user_with_underscores");
+		assert_eq!(
+			actor.unique_actor_identifier.to_string(),
+			"00000000-0000-0000-0000-000000000005"
+		);
+		assert!(!actor.is_deactivated);
+	}
+
+	#[sqlx::test(fixtures("../../../fixtures/local_actor_tests.sql"))]
+	async fn test_by_local_name_returns_none_for_nonexistent_user(pool: Pool<Postgres>) {
+		let db = Database { pool };
+
+		let result = LocalActor::by_local_name(&db, "nonexistent_user").await.unwrap();
+		assert!(result.is_none());
+	}
+
+	#[sqlx::test(fixtures("../../../fixtures/local_actor_tests.sql"))]
+	async fn test_by_local_name_returns_none_for_empty_string(pool: Pool<Postgres>) {
+		let db = Database { pool };
+
+		let result = LocalActor::by_local_name(&db, "").await.unwrap();
+		assert!(result.is_none());
+	}
+
+	#[sqlx::test(fixtures("../../../fixtures/local_actor_tests.sql"))]
+	async fn test_by_local_name_is_case_sensitive(pool: Pool<Postgres>) {
+		let db = Database { pool };
+
+		// Should find exact match
+		let result_exact = LocalActor::by_local_name(&db, "alice").await.unwrap();
+		assert!(result_exact.is_some());
+
+		// Should not find case-different match
+		let result_upper = LocalActor::by_local_name(&db, "ALICE").await.unwrap();
+		assert!(result_upper.is_none());
+
+		let result_mixed = LocalActor::by_local_name(&db, "Alice").await.unwrap();
+		assert!(result_mixed.is_none());
+	}
+
+	#[sqlx::test(fixtures("../../../fixtures/local_actor_tests.sql"))]
+	async fn test_create_new_user_success(pool: Pool<Postgres>) {
+		let db = Database { pool };
+
+		let result = LocalActor::create(&db, "new_user").await;
+		assert!(result.is_ok());
+
+		let actor = result.unwrap();
+		assert_eq!(actor.local_name, "new_user");
+		assert!(!actor.is_deactivated);
+		assert!(actor.unique_actor_identifier != sqlx::types::Uuid::nil());
+
+		// Verify the user was actually created in the database
+		let found = LocalActor::by_local_name(&db, "new_user").await.unwrap();
+		assert!(found.is_some());
+		let found_actor = found.unwrap();
+		assert_eq!(found_actor.unique_actor_identifier, actor.unique_actor_identifier);
+	}
+
+	#[sqlx::test(fixtures("../../../fixtures/local_actor_tests.sql"))]
+	async fn test_create_duplicate_user_returns_error(pool: Pool<Postgres>) {
+		let db = Database { pool };
+
+		let result = LocalActor::create(&db, "alice").await;
+		assert!(result.is_err());
+
+		match result.unwrap_err() {
+			SonataApiError::Error(error) => {
+				assert_eq!(error.code, Errcode::Duplicate);
+				assert!(error.context.is_some());
+				let context = error.context.unwrap();
+				assert_eq!(context.field_name, "local_name");
+				assert_eq!(context.found, "alice");
+			}
+			_ => panic!("Expected SonataApiError::Error with Duplicate errcode"),
+		}
+	}
+
+	#[sqlx::test(fixtures("../../../fixtures/local_actor_tests.sql"))]
+	async fn test_create_duplicate_deactivated_user_returns_error(pool: Pool<Postgres>) {
+		let db = Database { pool };
+
+		let result = LocalActor::create(&db, "deactivated_user").await;
+		assert!(result.is_err());
+
+		match result.unwrap_err() {
+			SonataApiError::Error(error) => {
+				assert_eq!(error.code, Errcode::Duplicate);
+				assert!(error.context.is_some());
+				let context = error.context.unwrap();
+				assert_eq!(context.field_name, "local_name");
+				assert_eq!(context.found, "deactivated_user");
+			}
+			_ => panic!("Expected SonataApiError::Error with Duplicate errcode"),
+		}
+	}
+
+	#[sqlx::test(fixtures("../../../fixtures/local_actor_tests.sql"))]
+	async fn test_create_user_with_special_characters(pool: Pool<Postgres>) {
+		let db = Database { pool };
+
+		let result = LocalActor::create(&db, "user.with-special_chars").await;
+		assert!(result.is_ok());
+
+		let actor = result.unwrap();
+		assert_eq!(actor.local_name, "user.with-special_chars");
+		assert!(!actor.is_deactivated);
+
+		let found = LocalActor::by_local_name(&db, "user.with-special_chars").await.unwrap();
+		assert!(found.is_some());
+	}
+
+	#[sqlx::test(fixtures("../../../fixtures/local_actor_tests.sql"))]
+	async fn test_create_user_with_empty_name(pool: Pool<Postgres>) {
+		let db = Database { pool };
+
+		let result = LocalActor::create(&db, "").await;
+		assert!(result.is_ok());
+
+		let actor = result.unwrap();
+		assert_eq!(actor.local_name, "");
+		assert!(!actor.is_deactivated);
+
+		let found = LocalActor::by_local_name(&db, "").await.unwrap();
+		assert!(found.is_some());
+	}
+
+	#[sqlx::test(fixtures("../../../fixtures/local_actor_tests.sql"))]
+	async fn test_create_multiple_users_have_different_uuids(pool: Pool<Postgres>) {
+		let db = Database { pool };
+
+		let user1 = LocalActor::create(&db, "user1").await.unwrap();
+		let user2 = LocalActor::create(&db, "user2").await.unwrap();
+		let user3 = LocalActor::create(&db, "user3").await.unwrap();
+
+		assert_ne!(user1.unique_actor_identifier, user2.unique_actor_identifier);
+		assert_ne!(user1.unique_actor_identifier, user3.unique_actor_identifier);
+		assert_ne!(user2.unique_actor_identifier, user3.unique_actor_identifier);
+
+		assert_ne!(user1.local_name, user2.local_name);
+		assert_ne!(user1.local_name, user3.local_name);
+		assert_ne!(user2.local_name, user3.local_name);
+	}
+
+	#[sqlx::test(fixtures("../../../fixtures/local_actor_tests.sql"))]
+	async fn test_create_user_sets_joined_timestamp(pool: Pool<Postgres>) {
+		let db = Database { pool };
+
+		let before_create = chrono::Utc::now().naive_utc();
+		let actor = LocalActor::create(&db, "timestamped_user").await.unwrap();
+		let after_create = chrono::Utc::now().naive_utc();
+
+		assert!(actor.joined_at_timestamp >= before_create);
+		assert!(actor.joined_at_timestamp <= after_create);
 	}
 }
