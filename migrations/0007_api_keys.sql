@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS user_tokens (
     token_hash VARCHAR(255) PRIMARY KEY,
     uaid UUID NOT NULL REFERENCES actors (uaid) ON DELETE CASCADE,
     valid_not_after TIMESTAMP NULL,
-    cert_id BIGINT NOT NULL REFERENCES idcert (idcsr_id),
+    cert_id BIGINT NULL REFERENCES idcert (idcsr_id),
     UNIQUE NULLS NOT DISTINCT (uaid, cert_id)
 );
 

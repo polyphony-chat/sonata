@@ -56,6 +56,7 @@ pub(super) fn start_api(
 		.data(db)
 		.data(token_store);
 
+	let api_config_clone = api_config.clone();
 	let handle = tokio::task::spawn(async move {
 		Server::new(TcpListener::bind((api_config.host.as_str().trim(), api_config.port)))
 			.run(routes)
@@ -63,18 +64,14 @@ pub(super) fn start_api(
 			.expect("Failed to start HTTP server");
 		log::info!("HTTP Server stopped");
 	});
-	info!("Started HTTP API server");
+	info!("Started HTTP API server at {}, port {}", api_config_clone.host, api_config_clone.port);
 	handle
 }
 
 #[cfg_attr(coverage_nightly, coverage(off))]
 /// Catch-all fallback error.
 async fn custom_error(err: poem::Error) -> impl IntoResponse {
-	Json(json! ({
-		"success": false,
-		"message": err.to_string(),
-	}))
-	.with_status(err.status())
+	Response::builder().content_type("application/json").status(err.status()).body(err.to_string())
 }
 
 #[cfg_attr(coverage_nightly, coverage(off))]

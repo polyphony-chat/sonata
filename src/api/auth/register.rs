@@ -23,6 +23,7 @@ pub async fn register(
 	Data(token_store): Data<&TokenStore>,
 ) -> Result<impl IntoResponse, SonataApiError> {
 	// TODO: Check if registration is currently allowed
+	// TODO: Check for tos_consent
 	// TODO: Check if registration is currently in invite-only mode
 	if LocalActor::by_local_name(db, &payload.local_name).await?.is_some() {
 		return Err(SonataApiError::Error(Error::new(

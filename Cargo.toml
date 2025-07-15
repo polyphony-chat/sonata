@@ -35,7 +35,7 @@ serde_json = "1.0.140"
 zeroize = { version = "1.8.1", features = ["derive"] }
 blake3 = "1.8.2"
 argon2 = "0.5.3"
-derive_more = { version = "2.0.1", features = ["display"] }
+derive_more = { version = "2.0.1", features = ["display", "from_str"] }
 
 [dev-dependencies]
 tokio-test = "0.4"

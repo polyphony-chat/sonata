@@ -4,10 +4,11 @@
 
 use std::fmt::Display;
 
-use derive_more::Display;
+use derive_more::{Display, FromStr};
 use poem::{IntoResponse, Response, error::ResponseError, http::StatusCode};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use serde_with::{DeserializeFromStr, SerializeDisplay};
 
 /// Generic error type.
 pub(crate) type StdError = Box<dyn std::error::Error + Sync + Send + 'static>;
@@ -64,7 +65,7 @@ impl Error {
 	}
 }
 
-#[derive(Debug, Clone, Copy, Display, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Copy, Display, PartialEq, FromStr, DeserializeFromStr, SerializeDisplay)]
 /// Standardized polyproto core error codes, giving a rough idea of what went
 /// wrong.
 pub enum Errcode {
@@ -82,11 +83,6 @@ pub enum Errcode {
 	/// One or many parts of the given input did not succeed validation against
 	/// context-specific criteria
 	IllegalInput,
-	#[display("P2_CORE_TOKEN_REVOKED")]
-	/// The access token the client used has been invalidated, and will not be
-	/// valid for any further requests. The client should try to retrieve a new
-	/// token.
-	TokenRevoked,
 }
 
 impl Errcode {
@@ -104,8 +100,7 @@ impl Errcode {
 				"Creation of the resource is not possible, as it already exists".to_owned()
 			}
     Errcode::IllegalInput => "The overall input is well-formed, but one or more of the input fields fail validation criteria".to_owned(),
-	Errcode::TokenRevoked => Errcode::TokenRevoked.to_string(),
-	}
+            }
 	}
 }
 
@@ -116,7 +111,6 @@ impl ResponseError for Errcode {
 			Errcode::Unauthorized => StatusCode::UNAUTHORIZED,
 			Errcode::Duplicate => StatusCode::CONFLICT,
 			Errcode::IllegalInput => StatusCode::BAD_REQUEST,
-			Errcode::TokenRevoked => StatusCode::UNAUTHORIZED,
 		}
 	}
 }
@@ -166,7 +160,7 @@ pub(crate) enum SonataApiError {
 	/// A DB-related error.
 	#[error(transparent)]
 	DbError(#[from] SonataDbError),
-	#[error("Error: {0}")]
+	#[error("{0}")]
 	Error(Error),
 }
 
