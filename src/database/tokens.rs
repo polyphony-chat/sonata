@@ -272,7 +272,7 @@ mod test {
 
 		sqlx::query!(
 			"INSERT INTO public_keys (id, uaid, pubkey, algorithm_identifier) VALUES
-            (5, '00000000-0000-0000-0000-000000000005', 'test_pubkey_5', 1)"
+            (7, '00000000-0000-0000-0000-000000000005', 'test_pubkey_7', 1)"
 		)
 		.execute(&pool)
 		.await
@@ -283,8 +283,8 @@ mod test {
                 id, serial_number, uaid, actor_public_key_id, actor_signature,
                 session_id, valid_not_before, valid_not_after, extensions, pem_encoded
             ) VALUES
-            (5, 22222222222222222222, '00000000-0000-0000-0000-000000000005', 5, 'test_signature_5',
-             'test_session_5', NOW() - INTERVAL '1 day', NOW() + INTERVAL '1 day', 'test_extensions_5', 'test_csr_pem_5')"
+            (7, 22222222222222222222, '00000000-0000-0000-0000-000000000005', 7, 'test_signature_7',
+             'test_session_7', NOW() - INTERVAL '1 day', NOW() + INTERVAL '1 day', 'test_extensions_7', 'test_csr_pem_7')"
         )
         .execute(&pool)
         .await
@@ -295,7 +295,40 @@ mod test {
                 idcsr_id, issuer_info_id, valid_not_before, valid_not_after,
                 home_server_public_key_id, home_server_signature, pem_encoded
             ) VALUES
-            (5, 1, NOW() - INTERVAL '1 day', NOW() + INTERVAL '1 day', 1, 'test_home_server_sig_5', 'test_cert_pem_5')"
+            (7, 1, NOW() - INTERVAL '1 day', NOW() + INTERVAL '1 day', 7, 'test_home_server_sig_7', 'test_cert_pem_7')"
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
+		// Create an additional certificate and ID-CSR for testing multiple expired
+		// tokens
+		sqlx::query!(
+			"INSERT INTO public_keys (id, uaid, pubkey, algorithm_identifier) VALUES
+            (9, '00000000-0000-0000-0000-000000000005', 'test_pubkey_9', 1)"
+		)
+		.execute(&pool)
+		.await
+		.unwrap();
+
+		sqlx::query!(
+            "INSERT INTO idcsr (
+                id, serial_number, uaid, actor_public_key_id, actor_signature,
+                session_id, valid_not_before, valid_not_after, extensions, pem_encoded
+            ) VALUES
+            (9, 22222222222222222223, '00000000-0000-0000-0000-000000000005', 9, 'test_signature_9',
+             'test_session_9', NOW() - INTERVAL '1 day', NOW() + INTERVAL '1 day', 'test_extensions_9', 'test_csr_pem_9')"
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
+		sqlx::query!(
+            "INSERT INTO idcert (
+                idcsr_id, issuer_info_id, valid_not_before, valid_not_after,
+                home_server_public_key_id, home_server_signature, pem_encoded
+            ) VALUES
+            (9, 1, NOW() - INTERVAL '1 day', NOW() + INTERVAL '1 day', 9, 'test_home_server_sig_9', 'test_cert_pem_9')"
         )
         .execute(&pool)
         .await
@@ -304,8 +337,8 @@ mod test {
 		// Insert only expired tokens
 		sqlx::query!(
             "INSERT INTO user_tokens (token_hash, cert_id, uaid, valid_not_after) VALUES
-            ('expired_token_hash_5_1', 5, '00000000-0000-0000-0000-000000000005', NOW() - INTERVAL '2 hours'),
-            ('expired_token_hash_5_2', 5, '00000000-0000-0000-0000-000000000005', NOW() - INTERVAL '1 hour')"
+            ('expired_token_hash_7_1', 7, '00000000-0000-0000-0000-000000000005', NOW() - INTERVAL '2 hours'),
+            ('expired_token_hash_9_1', 9, '00000000-0000-0000-0000-000000000005', NOW() - INTERVAL '1 hour')"
         )
         .execute(&pool)
         .await
@@ -345,7 +378,7 @@ mod test {
 
 		sqlx::query!(
 			"INSERT INTO public_keys (id, uaid, pubkey, algorithm_identifier) VALUES
-            (6, '00000000-0000-0000-0000-000000000006', 'test_pubkey_6', 1)"
+            (8, '00000000-0000-0000-0000-000000000006', 'test_pubkey_8', 1)"
 		)
 		.execute(&pool)
 		.await
@@ -356,8 +389,8 @@ mod test {
                 id, serial_number, uaid, actor_public_key_id, actor_signature,
                 session_id, valid_not_before, valid_not_after, extensions, pem_encoded
             ) VALUES
-            (6, 33333333333333333333, '00000000-0000-0000-0000-000000000006', 6, 'test_signature_6',
-             'test_session_6', NOW() - INTERVAL '1 day', NOW() + INTERVAL '1 day', 'test_extensions_6', 'test_csr_pem_6')"
+            (8, 33333333333333333333, '00000000-0000-0000-0000-000000000006', 8, 'test_signature_8',
+             'test_session_8', NOW() - INTERVAL '1 day', NOW() + INTERVAL '1 day', 'test_extensions_8', 'test_csr_pem_8')"
         )
         .execute(&pool)
         .await
@@ -368,7 +401,7 @@ mod test {
                 idcsr_id, issuer_info_id, valid_not_before, valid_not_after,
                 home_server_public_key_id, home_server_signature, pem_encoded
             ) VALUES
-            (6, 1, NOW() - INTERVAL '1 day', NOW() + INTERVAL '1 day', 1, 'test_home_server_sig_6', 'test_cert_pem_6')"
+            (8, 1, NOW() - INTERVAL '1 day', NOW() + INTERVAL '1 day', 8, 'test_home_server_sig_8', 'test_cert_pem_8')"
         )
         .execute(&pool)
         .await
@@ -378,7 +411,7 @@ mod test {
 		// expiring)
 		sqlx::query!(
 			"INSERT INTO user_tokens (token_hash, cert_id, uaid, valid_not_after) VALUES
-            ('never_expires_token_hash', 6, '00000000-0000-0000-0000-000000000006', NULL)"
+            ('never_expires_token_hash', 8, '00000000-0000-0000-0000-000000000006', NULL)"
 		)
 		.execute(&pool)
 		.await
@@ -430,10 +463,16 @@ mod test {
 		let serial_a = result_a.as_ref().unwrap();
 		let serial_b = result_b.as_ref().unwrap();
 
-		assert_eq!(serial_a, serial_b);
+		// Different tokens for the same user should have different serial numbers
+		// since each token corresponds to a different certificate/ID-CSR
+		assert_ne!(serial_a, serial_b);
 		assert_eq!(
 			serial_a.as_bigdecimal(),
 			&BigDecimal::from_str("12345678901234567890").unwrap()
+		);
+		assert_eq!(
+			serial_b.as_bigdecimal(),
+			&BigDecimal::from_str("12345678901234567891").unwrap()
 		);
 	}
 
@@ -509,7 +548,7 @@ mod test {
 		assert!(result.is_some());
 		assert_eq!(
 			result.unwrap().as_bigdecimal(),
-			&BigDecimal::from_str("55555555555555555555").unwrap()
+			&BigDecimal::from_str("55555555555555555556").unwrap()
 		);
 	}
 

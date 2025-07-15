@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO user_tokens (token_hash, cert_id, uaid, valid_not_after) VALUES\n            ('never_expires_token_hash', 8, '00000000-0000-0000-0000-000000000006', NULL)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "eb16315d167b60c4233d0660e2ad46dbe20a149863a20d3d653b5c6fe90b18cd"
+}
