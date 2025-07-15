@@ -3,10 +3,11 @@ use argon2::{
 	password_hash::{PasswordHasher, SaltString, rand_core::OsRng},
 };
 use poem::{
-	IntoResponse, handler,
+	IntoResponse, Response, ResponseBuilder, handler,
 	http::StatusCode,
 	web::{Data, Json},
 };
+use serde_json::json;
 
 use crate::{
 	api::models::{NISTPasswordRequirements, PasswordRequirements, RegisterSchema},
@@ -38,5 +39,9 @@ pub async fn register(
 	// TODO: Check if registration is currently in whitelist mode
 	let new_user =
 		LocalActor::create(db, &payload.local_name, password_hash.serialize().as_str()).await?;
-	Ok(poem::error::Error::from_status(StatusCode::NOT_IMPLEMENTED).into_response())
+	let token_hash =
+		token_store.generate_upsert_token(&new_user.unique_actor_identifier, None).await?;
+	Ok(Response::builder()
+		.status(StatusCode::CREATED)
+		.body(json!({"token": token_hash}).to_string()))
 }
