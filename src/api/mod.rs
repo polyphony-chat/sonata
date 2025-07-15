@@ -21,8 +21,12 @@ use crate::{
 pub(super) mod admin;
 /// Authentication functionality.
 mod auth;
+/// Routes coveringthe "federated identity" section of the polyproto-core
+/// specification.
+mod federated_identity;
 /// Custom middlewares, such as authentication and active-user.
 pub(crate) mod middlewares;
+/// API models, such as response schemas
 pub(crate) mod models;
 
 #[allow(clippy::expect_used)]
