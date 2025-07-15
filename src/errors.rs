@@ -82,6 +82,11 @@ pub enum Errcode {
 	/// One or many parts of the given input did not succeed validation against
 	/// context-specific criteria
 	IllegalInput,
+	#[display("P2_CORE_TOKEN_REVOKED")]
+	/// The access token the client used has been invalidated, and will not be
+	/// valid for any further requests. The client should try to retrieve a new
+	/// token.
+	TokenRevoked,
 }
 
 impl Errcode {
@@ -99,7 +104,8 @@ impl Errcode {
 				"Creation of the resource is not possible, as it already exists".to_owned()
 			}
     Errcode::IllegalInput => "The overall input is well-formed, but one or more of the input fields fail validation criteria".to_owned(),
-            }
+	Errcode::TokenRevoked => Errcode::TokenRevoked.to_string(),
+	}
 	}
 }
 
@@ -110,6 +116,7 @@ impl ResponseError for Errcode {
 			Errcode::Unauthorized => StatusCode::UNAUTHORIZED,
 			Errcode::Duplicate => StatusCode::CONFLICT,
 			Errcode::IllegalInput => StatusCode::BAD_REQUEST,
+			Errcode::TokenRevoked => StatusCode::UNAUTHORIZED,
 		}
 	}
 }
