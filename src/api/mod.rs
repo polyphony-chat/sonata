@@ -41,6 +41,7 @@ pub(super) fn start_api(
 	let routes = Route::new()
 		.at("/healthz", healthz)
 		.nest("/.p2/core/", setup_p2_core_routes())
+		.nest("/.p2/auth/", auth::setup_routes())
 		.with(NormalizePath::new(poem::middleware::TrailingSlash::Trim))
 		.with(Cors::new().allow_methods(&[
 			Method::CONNECT,
