@@ -10,7 +10,7 @@ use rand::{
 };
 use sqlx::query;
 
-use crate::{StdError, database::Database, errors::SonataDbError};
+use crate::{StdError, database::Database, errors::Error};
 
 /// Constant used to determine how long auto-generated tokens are supposed to
 /// be.
@@ -34,7 +34,7 @@ impl ApiKey {
 	/// Create a new `ApiKey`. API Keys must be >= 32 and <= 255 characters in
 	/// length. If your input string meets these two conditions, you will
 	/// receive an `Ok(ApiKey)`.
-	pub fn new(token: &str) -> Result<Self, StdError> {
+	pub fn new(token: &str) -> Result<Self, Error> {
 		if token.is_empty() {
 			return Err(String::from("Token must not be empty").into());
 		}
@@ -70,7 +70,7 @@ impl std::fmt::Display for ApiKey {
 pub(crate) async fn add_api_key_to_database(
 	token: &str,
 	database: &Database,
-) -> Result<ApiKey, crate::errors::SonataDbError> {
+) -> Result<ApiKey, sqlx::Error> {
 	let key = ApiKey::new(token).map_err(SonataDbError::StdError)?;
 	query!("INSERT INTO api_keys (token) VALUES ($1)", key.token())
 		.execute(&database.pool)

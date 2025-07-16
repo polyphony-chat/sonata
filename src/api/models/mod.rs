@@ -22,7 +22,30 @@ pub struct RegisterSchema {
 	pub password: String,
 	/// Optional: An invite code, which the client got referred to this instance
 	/// with.
+	#[serde(default)]
 	pub invite: Option<String>,
+	/// Key acquired by solving a captcha
+	#[serde(default)]
+	pub captcha_key: Option<String>,
+}
+
+#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+/// Information sent to the server by a client, when the client wants to login.
+///
+/// ## Important Note
+///
+/// sonata is in an MVP phase. As such, things like this `LoginSchema` are
+/// subject to a lot of change. If you build clients around sonata, expect
+/// things to break in future versions.
+pub struct LoginSchema {
+	/// The login username
+	pub local_name: String,
+	/// Login password
+	pub password: String,
+	/// Key acquired by solving a captcha
+	#[serde(default)]
+	pub captcha_key: Option<String>,
 }
 
 /// A trait to verify that a password string matches a set of requirements, such
@@ -70,8 +93,8 @@ impl PasswordRequirements for NISTPasswordRequirements {
 }
 
 #[cfg(test)]
+#[allow(clippy::indexing_slicing, clippy::unwrap_used, clippy::str_to_string)]
 mod tests {
-	use serde_json::json;
 
 	use super::*;
 
@@ -82,6 +105,7 @@ mod tests {
 			local_name: "testuser".to_string(),
 			password: "testpassword123".to_string(),
 			invite: Some("invite123".to_string()),
+			captcha_key: Some("captcha".to_string()),
 		};
 
 		let serialized = serde_json::to_string(&schema).unwrap();
@@ -91,6 +115,7 @@ mod tests {
 		assert_eq!(parsed["localName"], "testuser");
 		assert_eq!(parsed["password"], "testpassword123");
 		assert_eq!(parsed["invite"], "invite123");
+		assert_eq!(parsed["captchaKey"], "captcha");
 	}
 
 	#[test]
@@ -98,7 +123,7 @@ mod tests {
 		let json_str = r#"{"tosConsent":true,"localName":"testuser","password":"testpassword123","invite":"invite123"}"#;
 		let schema: RegisterSchema = serde_json::from_str(json_str).unwrap();
 
-		assert_eq!(schema.tos_consent, true);
+		assert!(schema.tos_consent);
 		assert_eq!(schema.local_name, "testuser");
 		assert_eq!(schema.password, "testpassword123");
 		assert_eq!(schema.invite, Some("invite123".to_string()));

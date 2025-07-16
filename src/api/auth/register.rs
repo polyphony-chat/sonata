@@ -3,7 +3,7 @@ use argon2::{
 	password_hash::{PasswordHasher, SaltString, rand_core::OsRng},
 };
 use poem::{
-	IntoResponse, Response, ResponseBuilder, handler,
+	IntoResponse, Response, handler,
 	http::StatusCode,
 	web::{Data, Json},
 };

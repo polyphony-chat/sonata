@@ -152,16 +152,31 @@ impl Context {
 #[derive(Debug, thiserror::Error)]
 /// Error type for errors that concern the HTTP API. Implements
 /// [poem::error::ResponseError].
+/// TODO rewrite documentation
 pub(crate) enum SonataApiError {
-	#[error(transparent)]
 	/// Generic error variant, supporting any type implementing
 	/// [std::error::Error].
-	StdError(StdError),
+	#[error("{0}")]
+	StdError(Error),
 	/// A DB-related error.
-	#[error(transparent)]
-	DbError(#[from] SonataDbError),
+	#[error("{0}")]
+	DbError(Error),
 	#[error("{0}")]
 	Error(Error),
+}
+
+impl From<sqlx::Error> for Error {
+	fn from(value: sqlx::Error) -> Self {
+		log::error!("{value}");
+		Self::new(Errcode::Internal, None)
+	}
+}
+
+impl From<StdError> for Error {
+	fn from(value: StdError) -> Self {
+		log::error!("{value}");
+		Self::new(Errcode::Internal, None)
+	}
 }
 
 impl From<Error> for SonataApiError {
@@ -180,24 +195,11 @@ pub(crate) enum SonataGatewayError {
 	StdError(StdError),
 }
 
-#[derive(Debug, thiserror::Error)]
-/// Error type for errors that concern the Database or Database connection.
-pub(crate) enum SonataDbError {
-	#[error(transparent)]
-	/// Generic error variant, supporting any type implementing
-	/// [std::error::Error].
-	StdError(StdError),
-	#[error(transparent)]
-	/// An [sqlx::Error]
-	Sqlx(#[from] sqlx::Error),
-}
-
 impl ResponseError for SonataApiError {
 	fn status(&self) -> poem::http::StatusCode {
 		match self {
 			SonataApiError::StdError(_) => StatusCode::INTERNAL_SERVER_ERROR,
-			SonataApiError::DbError(sonata_db_error) => sonata_db_error.status(),
-			SonataApiError::Error(error) => error.code.status(),
+			SonataApiError::Error(error) | SonataApiError::DbError(error) => error.code.status(),
 		}
 	}
 }
@@ -209,15 +211,6 @@ impl IntoResponse for SonataApiError {
 			SonataApiError::DbError(_) => Error::new(Errcode::Internal, None).to_response_body(),
 			SonataApiError::Error(error) => error.to_response_body(),
 		})
-	}
-}
-
-impl ResponseError for SonataDbError {
-	fn status(&self) -> poem::http::StatusCode {
-		match self {
-			SonataDbError::StdError(_) => StatusCode::INTERNAL_SERVER_ERROR,
-			SonataDbError::Sqlx(_) => StatusCode::INTERNAL_SERVER_ERROR,
-		}
 	}
 }
 
