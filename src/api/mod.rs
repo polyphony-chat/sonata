@@ -4,7 +4,9 @@
 
 use log::info;
 use poem::{
-	EndpointExt, IntoResponse, Response, Route, Server, handler,
+	EndpointExt, IntoResponse, Response, Route, Server,
+	error::ResponseError,
+	handler,
 	http::{Method, StatusCode},
 	listener::TcpListener,
 	middleware::{Cors, NormalizePath},
@@ -15,6 +17,7 @@ use serde_json::json;
 use crate::{
 	config::ApiConfig,
 	database::{Database, tokens::TokenStore},
+	errors::Error,
 };
 
 /// Admin-only functionality.
@@ -52,7 +55,6 @@ pub(super) fn start_api(
 			Method::PATCH,
 			Method::OPTIONS,
 		]))
-		.catch_all_error(custom_error)
 		.data(db)
 		.data(token_store);
 
@@ -66,12 +68,6 @@ pub(super) fn start_api(
 	});
 	info!("Started HTTP API server at {}, port {}", api_config_clone.host, api_config_clone.port);
 	handle
-}
-
-#[cfg_attr(coverage_nightly, coverage(off))]
-/// Catch-all fallback error.
-async fn custom_error(err: poem::Error) -> impl IntoResponse {
-	Response::builder().content_type("application/json").status(err.status()).body(err.to_string())
 }
 
 #[cfg_attr(coverage_nightly, coverage(off))]

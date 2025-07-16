@@ -10,7 +10,7 @@ use rand::{
 };
 use sqlx::query;
 
-use crate::{StdError, database::Database, errors::SonataDbError};
+use crate::{StdError, database::Database, errors::Error};
 
 /// Constant used to determine how long auto-generated tokens are supposed to
 /// be.
@@ -70,12 +70,9 @@ impl std::fmt::Display for ApiKey {
 pub(crate) async fn add_api_key_to_database(
 	token: &str,
 	database: &Database,
-) -> Result<ApiKey, crate::errors::SonataDbError> {
-	let key = ApiKey::new(token).map_err(SonataDbError::StdError)?;
-	query!("INSERT INTO api_keys (token) VALUES ($1)", key.token())
-		.execute(&database.pool)
-		.await
-		.map_err(SonataDbError::Sqlx)?;
+) -> Result<ApiKey, Error> {
+	let key = ApiKey::new(token).map_err(|_| Error::new(crate::errors::Errcode::Internal, None))?;
+	query!("INSERT INTO api_keys (token) VALUES ($1)", key.token()).execute(&database.pool).await?;
 	Ok(key)
 }
 

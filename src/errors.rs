@@ -42,20 +42,38 @@ pub struct Error {
 	pub context: Option<Context>,
 }
 
-impl Display for Error {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		f.write_str(&self.to_response_body())
+impl IntoResponse for Error {
+	fn into_response(self) -> Response {
+		Response::builder()
+			.content_type("application/json")
+			.status(self.code.status())
+			.body(self.to_json())
+	}
+}
+
+impl ResponseError for Error {
+	fn status(&self) -> StatusCode {
+		self.code.status()
+	}
+}
+
+impl From<sqlx::Error> for Error {
+	fn from(value: sqlx::Error) -> Self {
+		log::error!("{value}");
+		Error::new(Errcode::Internal, None)
+	}
+}
+
+impl From<Error> for poem::Error {
+	fn from(value: Error) -> Self {
+		poem::Error::from_response(value.into_response())
 	}
 }
 
 impl Error {
-	/// Performs the conversion of [Self] into a [SonataApiError].
-	pub fn into_api_error(self) -> SonataApiError {
-		SonataApiError::Error(self)
-	}
 	/// Performs the conversion of a shared reference to [Self] into JSON,
 	/// formatted as a string.
-	pub fn to_response_body(&self) -> String {
+	pub fn to_json(&self) -> String {
 		json!(self).to_string()
 	}
 
@@ -145,78 +163,6 @@ impl Context {
 			field_name: field_name.map(String::from).unwrap_or_default(),
 			found: found.map(String::from).unwrap_or_default(),
 			expected: expected.map(String::from).unwrap_or_default(),
-		}
-	}
-}
-
-#[derive(Debug, thiserror::Error)]
-/// Error type for errors that concern the HTTP API. Implements
-/// [poem::error::ResponseError].
-pub(crate) enum SonataApiError {
-	#[error(transparent)]
-	/// Generic error variant, supporting any type implementing
-	/// [std::error::Error].
-	StdError(StdError),
-	/// A DB-related error.
-	#[error(transparent)]
-	DbError(#[from] SonataDbError),
-	#[error("{0}")]
-	Error(Error),
-}
-
-impl From<Error> for SonataApiError {
-	fn from(value: Error) -> Self {
-		Self::Error(value)
-	}
-}
-
-#[derive(Debug, thiserror::Error)]
-/// Error type for errors that concern interactions with the Database.
-/// Implements [poem::error::ResponseError].
-pub(crate) enum SonataGatewayError {
-	#[error(transparent)]
-	/// Generic error variant, supporting any type implementing
-	/// [std::error::Error].
-	StdError(StdError),
-}
-
-#[derive(Debug, thiserror::Error)]
-/// Error type for errors that concern the Database or Database connection.
-pub(crate) enum SonataDbError {
-	#[error(transparent)]
-	/// Generic error variant, supporting any type implementing
-	/// [std::error::Error].
-	StdError(StdError),
-	#[error(transparent)]
-	/// An [sqlx::Error]
-	Sqlx(#[from] sqlx::Error),
-}
-
-impl ResponseError for SonataApiError {
-	fn status(&self) -> poem::http::StatusCode {
-		match self {
-			SonataApiError::StdError(_) => StatusCode::INTERNAL_SERVER_ERROR,
-			SonataApiError::DbError(sonata_db_error) => sonata_db_error.status(),
-			SonataApiError::Error(error) => error.code.status(),
-		}
-	}
-}
-
-impl IntoResponse for SonataApiError {
-	fn into_response(self) -> Response {
-		Response::builder().status(self.status()).body(match self {
-			SonataApiError::StdError(_) => Error::new(Errcode::Internal, None).to_response_body(),
-			SonataApiError::DbError(_) => Error::new(Errcode::Internal, None).to_response_body(),
-			SonataApiError::Error(error) => error.to_response_body(),
-		})
-	}
-}
-
-impl ResponseError for SonataDbError {
-	fn status(&self) -> poem::http::StatusCode {
-		match self {
-			SonataDbError::StdError(_) => StatusCode::INTERNAL_SERVER_ERROR,
-			SonataDbError::Sqlx(_) => StatusCode::INTERNAL_SERVER_ERROR,
 		}
 	}
 }

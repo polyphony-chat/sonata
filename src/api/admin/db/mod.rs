@@ -5,7 +5,10 @@
 use rand::{Rng, distr::Alphanumeric};
 use sqlx::{query_as, types::Uuid};
 
-use crate::database::{Database, Invite};
+use crate::{
+	database::{Database, Invite},
+	errors::Error,
+};
 
 /// Create an invite.
 pub(super) async fn create_invite(
@@ -13,7 +16,7 @@ pub(super) async fn create_invite(
 	code: Option<&str>,
 	uses_max: i32,
 	db: &Database,
-) -> Result<Invite, crate::errors::SonataDbError> {
+) -> Result<Invite, Error> {
 	let code = {
 		if let Some(code) = code {
 			code

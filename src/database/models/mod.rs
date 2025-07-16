@@ -7,7 +7,7 @@ use sqlx::{query, query_as, types::Uuid};
 
 use crate::{
 	database::Database,
-	errors::{Context, Errcode, Error, SonataApiError, SonataDbError},
+	errors::{Context, Errcode, Error},
 };
 
 #[derive(sqlx::FromRow, sqlx::Type)]
@@ -55,10 +55,7 @@ impl LocalActor {
 	///
 	/// Will error on Database connection issues and on other errors with the
 	/// database, all of which are not in scope for this function to handle.
-	pub async fn by_local_name(
-		db: &Database,
-		name: &str,
-	) -> Result<Option<LocalActor>, SonataDbError> {
+	pub async fn by_local_name(db: &Database, name: &str) -> Result<Option<LocalActor>, Error> {
 		Ok(query!(
 			"
             SELECT uaid, local_name, deactivated, joined
@@ -90,24 +87,23 @@ impl LocalActor {
 		db: &Database,
 		local_name: &str,
 		password_hash: &str,
-	) -> Result<LocalActor, SonataApiError> {
+	) -> Result<LocalActor, Error> {
 		if LocalActor::by_local_name(db, local_name).await?.is_some() {
-			Err(SonataApiError::Error(Error::new(
+			Err(Error::new(
 				Errcode::Duplicate,
 				Some(Context::new(Some("local_name"), Some(local_name), None)),
-			)))
+			))
 		} else {
 			let uaid = query!("INSERT INTO actors (type) VALUES ('local') RETURNING uaid")
 				.fetch_one(&db.pool)
-				.await
-				.map_err(SonataDbError::Sqlx)?;
+				.await?;
 			Ok(query_as!(
 			LocalActor,
 			"INSERT INTO local_actors (uaid, local_name, password_hash) VALUES ($1, $2, $3) RETURNING uaid AS unique_actor_identifier, local_name, deactivated AS is_deactivated, joined AS joined_at_timestamp",
 			uaid.uaid,
 			local_name,
 			password_hash
-		).fetch_one(&db.pool).await.map_err(SonataDbError::Sqlx)?)
+		).fetch_one(&db.pool).await?)
 		}
 	}
 }
@@ -292,14 +288,13 @@ mod tests {
 		assert!(result.is_err());
 
 		match result.unwrap_err() {
-			SonataApiError::Error(error) => {
+			error => {
 				assert_eq!(error.code, Errcode::Duplicate);
 				assert!(error.context.is_some());
 				let context = error.context.unwrap();
 				assert_eq!(context.field_name, "local_name");
 				assert_eq!(context.found, "alice");
 			}
-			_ => panic!("Expected SonataApiError::Error with Duplicate errcode"),
 		}
 	}
 
@@ -311,14 +306,13 @@ mod tests {
 		assert!(result.is_err());
 
 		match result.unwrap_err() {
-			SonataApiError::Error(error) => {
+			error => {
 				assert_eq!(error.code, Errcode::Duplicate);
 				assert!(error.context.is_some());
 				let context = error.context.unwrap();
 				assert_eq!(context.field_name, "local_name");
 				assert_eq!(context.found, "deactivated_user");
 			}
-			_ => panic!("Expected SonataApiError::Error with Duplicate errcode"),
 		}
 	}
 

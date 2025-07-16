@@ -4,7 +4,7 @@ use zeroize::Zeroizing;
 
 use crate::{
 	database::{Database, serial_number::SerialNumber},
-	errors::SonataDbError,
+	errors::Error,
 };
 
 #[derive(Debug, Clone)]
@@ -43,7 +43,7 @@ impl TokenStore {
 	pub async fn get_token_userid(
 		&self,
 		serial_number: &SerialNumber,
-	) -> Result<Option<TokenActorIdPair>, SonataDbError> {
+	) -> Result<Option<TokenActorIdPair>, Error> {
 		let record = query_as!(
             TokenActorIdPair,
             r#"
@@ -86,7 +86,7 @@ impl TokenStore {
 	pub async fn get_token_serial_number(
 		&self,
 		token_hash: &str,
-	) -> Result<Option<SerialNumber>, SonataDbError> {
+	) -> Result<Option<SerialNumber>, Error> {
 		Ok(query!(
 			"SELECT idcsr.serial_number
                 FROM user_tokens
@@ -120,7 +120,7 @@ impl TokenStore {
 		&self,
 		actor_id: &Uuid,
 		cert_id: Option<i64>,
-	) -> Result<String, SonataDbError> {
+	) -> Result<String, Error> {
 		let token_hash = hash_auth_token(&Alphanumeric.sample_string(&mut rand::rng(), 96));
 		query!(
 			"INSERT INTO user_tokens (token_hash, uaid, cert_id) VALUES ($1, $2, $3) ON CONFLICT (cert_id, uaid) DO UPDATE SET token_hash = EXCLUDED.token_hash",

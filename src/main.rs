@@ -110,7 +110,8 @@ async fn main() -> StdResult<()> {
 		Some(0) | None => {
 			let api_key =
 				api_keys::add_api_key_to_database(&ApiKey::new_random(&mut rand::rng()), &database)
-					.await?;
+					.await
+					.map_err(|_| String::from("Error adding API key to database}"))?;
 			info!("Added an API key to the database, since none were available: {api_key}");
 			info!("Save this API key, as it will not be shown again on future starts.");
 		}
