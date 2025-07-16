@@ -1,0 +1,28 @@
+type: http_request
+model: http_request
+id: rq_QToSTAHy2Y
+createdAt: 2025-07-15T19:17:36
+updatedAt: 2025-07-16T21:22:06
+workspaceId: wk_vbiXiwGS7L
+folderId: null
+authentication: {}
+authenticationType: null
+body:
+  text: |-
+    {
+      "tosConsent": true,
+      "localName": "bitfl0wer",
+      "password": "78210canaries"
+    }
+bodyType: application/json
+description: ''
+headers:
+- enabled: true
+  name: Content-Type
+  value: application/json
+  id: null
+method: POST
+name: ''
+sortPriority: -1752606834688.0
+url: http://localhost:3011/.p2/auth/register
+urlParameters: []

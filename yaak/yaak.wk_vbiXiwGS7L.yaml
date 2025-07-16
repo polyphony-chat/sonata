@@ -1,0 +1,14 @@
+type: workspace
+model: workspace
+id: wk_vbiXiwGS7L
+createdAt: 2025-07-15T19:14:33
+updatedAt: 2025-07-16T21:16:41
+authentication: {}
+authenticationType: null
+description: ''
+headers: []
+name: sonata
+encryptionKeyChallenge: null
+settingValidateCertificates: true
+settingFollowRedirects: true
+settingRequestTimeout: 0
