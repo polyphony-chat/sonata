@@ -61,6 +61,7 @@ impl ApiKey {
 }
 
 impl std::fmt::Display for ApiKey {
+	#[cfg_attr(coverage_nightly, coverage(off))]
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		f.write_str(self)
 	}

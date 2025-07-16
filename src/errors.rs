@@ -40,6 +40,7 @@ pub struct Error {
 }
 
 impl IntoResponse for Error {
+	#[cfg_attr(coverage_nightly, coverage(off))]
 	fn into_response(self) -> Response {
 		Response::builder()
 			.content_type("application/json")
@@ -49,12 +50,14 @@ impl IntoResponse for Error {
 }
 
 impl ResponseError for Error {
+	#[cfg_attr(coverage_nightly, coverage(off))]
 	fn status(&self) -> StatusCode {
 		self.code.status()
 	}
 }
 
 impl From<sqlx::Error> for Error {
+	#[cfg_attr(coverage_nightly, coverage(off))]
 	fn from(value: sqlx::Error) -> Self {
 		log::error!("{value}");
 		Error::new(Errcode::Internal, None)
@@ -62,6 +65,7 @@ impl From<sqlx::Error> for Error {
 }
 
 impl From<Error> for poem::Error {
+	#[cfg_attr(coverage_nightly, coverage(off))]
 	fn from(value: Error) -> Self {
 		poem::Error::from_response(value.into_response())
 	}
@@ -129,6 +133,7 @@ impl Errcode {
 }
 
 impl ResponseError for Errcode {
+	#[cfg_attr(coverage_nightly, coverage(off))]
 	fn status(&self) -> StatusCode {
 		match self {
 			Errcode::Internal => StatusCode::INTERNAL_SERVER_ERROR,

@@ -26,6 +26,7 @@ pub struct Actor {
 }
 
 impl From<LocalActor> for Actor {
+	#[cfg_attr(coverage_nightly, coverage(off))]
 	fn from(value: LocalActor) -> Self {
 		Self { unique_actor_identifier: value.unique_actor_identifier, r#type: ActorType::Local }
 	}
