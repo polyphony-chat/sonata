@@ -2,9 +2,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use std::fmt::Display;
-
-use derive_more::{Display, FromStr};
 use poem::{IntoResponse, Response, error::ResponseError, http::StatusCode};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -83,21 +80,30 @@ impl Error {
 	}
 }
 
-#[derive(Debug, Clone, Copy, Display, PartialEq, FromStr, DeserializeFromStr, SerializeDisplay)]
+#[derive(
+	Debug,
+	Clone,
+	Copy,
+	PartialEq,
+	DeserializeFromStr,
+	SerializeDisplay,
+	strum::Display,
+	strum::EnumString,
+)]
 /// Standardized polyproto core error codes, giving a rough idea of what went
 /// wrong.
 pub enum Errcode {
-	#[display("P2_CORE_INTERNAL")]
+	#[strum(serialize = "P2_CORE_INTERNAL")]
 	/// An internal error occurred.
 	Internal,
-	#[display("P2_CORE_UNAUTHORIZED")]
+	#[strum(serialize = "P2_CORE_UNAUTHORIZED")]
 	/// Unauthorized
 	Unauthorized,
-	#[display("P2_CORE_DUPLICATE")]
+	#[strum(serialize = "P2_CORE_DUPLICATE")]
 	/// The resource already exists, and the context does not allow for
 	/// duplicate resources
 	Duplicate,
-	#[display("P2_CORE_ILLEGAL_INPUT")]
+	#[strum(serialize = "P2_CORE_ILLEGAL_INPUT")]
 	/// One or many parts of the given input did not succeed validation against
 	/// context-specific criteria
 	IllegalInput,
@@ -174,14 +180,12 @@ mod tests {
 	#[test]
 	fn test_error_serialization() {
 		let context = Context::new(Some("field"), Some("value"), Some("expected"));
-		let error = Error {
-			code: Errcode::IllegalInput,
-			message: "Test message".to_string(),
-			context: Some(context),
-		};
+		let error = Error::new(Errcode::IllegalInput, Some(context));
 
 		let serialized = serde_json::to_string(&error).unwrap();
+		println!("{serialized}");
 		let deserialized: Error = serde_json::from_str(&serialized).unwrap();
+		println!("{deserialized:#?}");
 
 		assert_eq!(deserialized.code, error.code);
 		assert_eq!(deserialized.message, error.message);
