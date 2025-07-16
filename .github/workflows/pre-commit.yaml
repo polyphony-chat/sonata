@@ -18,6 +18,13 @@ jobs:
       - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
         with:
           cache-all-crates: "true"
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: "rustfmt"
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "stable"
+          components: "rustfmt"
       - name: Setup PostgreSQL for Linux/macOS/Windows
         uses: ikalnytskyi/action-setup-postgres@v7
         id: postgres

@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO public_keys (id, uaid, pubkey, algorithm_identifier) VALUES\n            (8, '00000000-0000-0000-0000-000000000006', 'test_pubkey_8', 1)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "9d090bb687a32d58d3bbb992b3540b242eaf932b0e79e78e4b4e34b468eedb74"
+}

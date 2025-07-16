@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO idcert (\n                idcsr_id, issuer_info_id, valid_not_before, valid_not_after,\n                home_server_public_key_id, home_server_signature, pem_encoded\n            ) VALUES\n            (9, 1, NOW() - INTERVAL '1 day', NOW() + INTERVAL '1 day', 9, 'test_home_server_sig_9', 'test_cert_pem_9')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "8f42be0bfd0a99eaef3ba9b98d18068ddf4716cbfb1f4c6b02199ee33249e887"
+}

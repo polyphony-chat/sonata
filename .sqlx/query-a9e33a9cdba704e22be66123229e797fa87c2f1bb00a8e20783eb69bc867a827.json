@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT idcsr.serial_number\n                FROM user_tokens\n                JOIN idcert ON user_tokens.cert_id = idcert.idcsr_id\n                JOIN idcsr ON idcert.idcsr_id = idcsr.id\n                WHERE user_tokens.token_hash = $1;\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "serial_number",
+        "type_info": "Numeric"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "a9e33a9cdba704e22be66123229e797fa87c2f1bb00a8e20783eb69bc867a827"
+}

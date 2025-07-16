@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO idcsr (\n                id, serial_number, uaid, actor_public_key_id, actor_signature,\n                session_id, valid_not_before, valid_not_after, extensions, pem_encoded\n            ) VALUES\n            (7, 22222222222222222222, '00000000-0000-0000-0000-000000000005', 7, 'test_signature_7',\n             'test_session_7', NOW() - INTERVAL '1 day', NOW() + INTERVAL '1 day', 'test_extensions_7', 'test_csr_pem_7')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "6736ea6db6c90a689e54087efc85ecb6d42384fc189702d26652ab300de19026"
+}

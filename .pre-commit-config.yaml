@@ -30,4 +30,5 @@ repos:
   rev: d1a3655a3bd49307866fa6f06f0ebace5aed5618
   hooks:
       - id: cargo-fmt
+        entry: bash -c 'cargo +nightly fmt --all'
       - id: clippy

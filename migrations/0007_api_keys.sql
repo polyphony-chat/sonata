@@ -6,9 +6,10 @@ CREATE TABLE IF NOT EXISTS api_keys (
 
 CREATE TABLE IF NOT EXISTS user_tokens (
     token_hash VARCHAR(255) PRIMARY KEY,
-    cert_id BIGINT NOT NULL REFERENCES idcsr (id),
     uaid UUID NOT NULL REFERENCES actors (uaid) ON DELETE CASCADE,
-    valid_not_after TIMESTAMP NULL
+    valid_not_after TIMESTAMP NULL,
+    cert_id BIGINT NULL REFERENCES idcert (idcsr_id),
+    UNIQUE NULLS NOT DISTINCT (uaid, cert_id)
 );
 
 COMMENT ON TABLE user_tokens IS 'User access token hashes. Cleans up expired tokens on each insert operation of this table. Use view filtering to exclude expired tokens on queries.';
