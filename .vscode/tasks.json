@@ -2,9 +2,14 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "Generate Coverage",
+			"label": "Generate Coverage (.lcov)",
 			"type": "shell",
-			"command": "cargo +nightly llvm-cov nextest --lcov --output-path coverage/lcov.info --branch --mcdc --all-targets --all-features --workspace"
+			"command": "cargo +nightly llvm-cov nextest --lcov --output-path coverage/lcov.info --branch --all-targets --all-features --workspace"
+		},
+		{
+			"label": "Generate Coverage (Overview)",
+			"type": "shell",
+			"command": "cargo +nightly llvm-cov nextest --branch --all-targets --all-features --workspace"
 		}
 	]
 }
