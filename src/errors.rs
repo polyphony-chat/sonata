@@ -71,16 +71,37 @@ impl From<Error> for poem::Error {
 	}
 }
 
+/// Error message for a wrong username or password.
+pub const ERROR_WRONG_LOGIN: &str = "The provided login name or password was incorrect.";
+
 impl Error {
 	/// Performs the conversion of a shared reference to [Self] into JSON,
 	/// formatted as a string.
+	#[must_use]
 	pub fn to_json(&self) -> String {
 		json!(self).to_string()
 	}
 
 	/// Creates [Self].
+	#[must_use]
 	pub fn new(code: Errcode, context: Option<Context>) -> Self {
 		Self { code, message: code.message(), context }
+	}
+
+	/// Creates a variant of [Self] which indicates to a client, that the
+	/// provided combination of login name and password was incorrect, without
+	/// telling the client what the concrete issue was.
+	///
+	/// This helper method is useful, because inconsistencies between error
+	/// messages indicating wrong login credentials could potentially leave an
+	/// attacker with information about internal state they are not supposed to
+	/// know about.
+	#[must_use = "Not returning this variant as a response opens up the possibility of leaking internal state!"]
+	pub fn invalid_login() -> Self {
+		Error::new(
+			Errcode::Unauthorized,
+			Some(Context::new(None, None, None, Some(ERROR_WRONG_LOGIN))),
+		)
 	}
 }
 
@@ -165,15 +186,24 @@ pub struct Context {
 	#[serde(skip_serializing_if = "String::is_empty")]
 	/// The value that was expected
 	pub expected: String,
+	#[serde(skip_serializing_if = "String::is_empty")]
+	/// An optional, additional, human-readable error message
+	pub message: String,
 }
 
 impl Context {
 	/// Creates [Self].
-	pub fn new(field_name: Option<&str>, found: Option<&str>, expected: Option<&str>) -> Self {
+	pub fn new(
+		field_name: Option<&str>,
+		found: Option<&str>,
+		expected: Option<&str>,
+		message: Option<&str>,
+	) -> Self {
 		Self {
 			field_name: field_name.map(String::from).unwrap_or_default(),
 			found: found.map(String::from).unwrap_or_default(),
 			expected: expected.map(String::from).unwrap_or_default(),
+			message: message.map(String::from).unwrap_or_default(),
 		}
 	}
 }
@@ -184,7 +214,7 @@ mod tests {
 
 	#[test]
 	fn test_error_serialization() {
-		let context = Context::new(Some("field"), Some("value"), Some("expected"));
+		let context = Context::new(Some("field"), Some("value"), Some("expected"), None);
 		let error = Error::new(Errcode::IllegalInput, Some(context));
 
 		let serialized = serde_json::to_string(&error).unwrap();

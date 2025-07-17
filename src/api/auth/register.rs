@@ -9,15 +9,16 @@ use poem::{
 };
 use serde_json::json;
 
+use super::models::RegisterSchema;
 use crate::{
-	api::models::{NISTPasswordRequirements, PasswordRequirements, RegisterSchema},
+	api::models::{NISTPasswordRequirements, PasswordRequirements},
 	database::{Database, LocalActor, tokens::TokenStore},
 	errors::{Context, Errcode, Error},
 };
 
 #[cfg_attr(coverage_nightly, coverage(off))]
 #[handler]
-pub async fn register(
+pub(super) async fn register(
 	Json(payload): Json<RegisterSchema>,
 	Data(db): Data<&Database>,
 	Data(token_store): Data<&TokenStore>,
@@ -28,7 +29,7 @@ pub async fn register(
 	if LocalActor::by_local_name(db, &payload.local_name).await?.is_some() {
 		return Err(Error::new(
 			Errcode::Duplicate,
-			Some(Context::new(Some("local_name"), Some(&payload.local_name), None)),
+			Some(Context::new(Some("local_name"), Some(&payload.local_name), None, None)),
 		));
 	}
 	let password = NISTPasswordRequirements::verify_requirements(&payload.password)?;
