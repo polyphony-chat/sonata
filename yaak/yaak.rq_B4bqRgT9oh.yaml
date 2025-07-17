@@ -1,8 +1,8 @@
 type: http_request
 model: http_request
-id: rq_QToSTAHy2Y
-createdAt: 2025-07-15T19:17:36
-updatedAt: 2025-07-17T18:28:15.953481536
+id: rq_B4bqRgT9oh
+createdAt: 2025-07-17T18:27:46.947934125
+updatedAt: 2025-07-17T18:36:37.203711749
 workspaceId: wk_vbiXiwGS7L
 folderId: null
 authentication: {}
@@ -10,7 +10,6 @@ authenticationType: null
 body:
   text: |-
     {
-      "tosConsent": true,
       "localName": "bitfl0wer",
       "password": "78210canaries"
     }
@@ -23,6 +22,6 @@ headers:
   id: null
 method: POST
 name: ''
-sortPriority: 0.0
-url: http://localhost:3011/.p2/auth/register
+sortPriority: 1000.0
+url: http://localhost:3011/.p2/auth/login
 urlParameters: []

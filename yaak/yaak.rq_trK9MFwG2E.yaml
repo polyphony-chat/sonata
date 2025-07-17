@@ -2,7 +2,7 @@ type: http_request
 model: http_request
 id: rq_trK9MFwG2E
 createdAt: 2025-07-15T19:14:37
-updatedAt: 2025-07-15T19:17:29
+updatedAt: 2025-07-17T18:28:16.012956269
 workspaceId: wk_vbiXiwGS7L
 folderId: null
 authentication: {}
@@ -13,6 +13,6 @@ description: ''
 headers: []
 method: GET
 name: ''
-sortPriority: -1752606834688.0
+sortPriority: 2000.0
 url: http://localhost:3011/healthz
 urlParameters: []
