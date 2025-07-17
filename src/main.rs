@@ -16,6 +16,11 @@ use clap::Parser;
 use log::{LevelFilter, debug, error, info, trace};
 use sqlx::query_scalar;
 
+/// The maximum password length this server allows. Passwords longer than this
+/// will not be hashed or processed at all, and will result in a `400` status
+/// code for the user.
+pub(crate) const MAX_PERMITTED_PASSWORD_LEN: usize = 128;
+
 /// Module housing the HTTP API routes and functionality
 mod api;
 /// Module hosting logic for the sonata CLI

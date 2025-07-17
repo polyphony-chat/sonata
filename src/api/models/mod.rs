@@ -1,29 +1,7 @@
-use serde::{Deserialize, Serialize};
-
-use crate::errors::{Context, Error};
-
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
-/// Information sent to the server by a client, when the client wants to create
-/// a new account.
-///
-/// ## Important Note
-///
-/// sonata is in an MVP phase. As such, things like this `RegisterSchema` are
-/// subject to a lot of change. If you build clients around sonata, expect
-/// things to break in future versions.
-pub struct RegisterSchema {
-	/// Whether the client has agreed to the terms of service offered by the
-	/// instance.
-	pub tos_consent: bool,
-	/// The local name the client would like to choose
-	pub local_name: String,
-	/// A password for the clients' new account
-	pub password: String,
-	/// Optional: An invite code, which the client got referred to this instance
-	/// with.
-	pub invite: Option<String>,
-}
+use crate::{
+	MAX_PERMITTED_PASSWORD_LEN,
+	errors::{Context, Error},
+};
 
 /// A trait to verify that a password string matches a set of requirements, such
 /// as length, composition details, permitted character set, etc.
@@ -55,13 +33,17 @@ pub struct NISTPasswordRequirements;
 impl PasswordRequirements for NISTPasswordRequirements {
 	fn verify_requirements(password: &str) -> Result<String, Error> {
 		let len = password.len();
-		if !(8..=64).contains(&len) {
+		if !(8..=MAX_PERMITTED_PASSWORD_LEN).contains(&len) {
 			return Err(Error::new(
 				crate::errors::Errcode::IllegalInput,
 				Some(Context::new(
 					Some("password"),
 					Some(&(len.to_string() + " characters")),
-					Some("More than 7 and less than 65 characters"),
+					Some(&format!(
+						"More than 7 and less than {} characters",
+						MAX_PERMITTED_PASSWORD_LEN.saturating_add(1)
+					)),
+					None,
 				)),
 			));
 		}
@@ -71,38 +53,8 @@ impl PasswordRequirements for NISTPasswordRequirements {
 
 #[cfg(test)]
 mod tests {
-	use serde_json::json;
 
 	use super::*;
-
-	#[test]
-	fn test_register_schema_serialization() {
-		let schema = RegisterSchema {
-			tos_consent: true,
-			local_name: "testuser".to_string(),
-			password: "testpassword123".to_string(),
-			invite: Some("invite123".to_string()),
-		};
-
-		let serialized = serde_json::to_string(&schema).unwrap();
-		let parsed: serde_json::Value = serde_json::from_str(&serialized).unwrap();
-
-		assert_eq!(parsed["tosConsent"], true);
-		assert_eq!(parsed["localName"], "testuser");
-		assert_eq!(parsed["password"], "testpassword123");
-		assert_eq!(parsed["invite"], "invite123");
-	}
-
-	#[test]
-	fn test_register_schema_deserialization() {
-		let json_str = r#"{"tosConsent":true,"localName":"testuser","password":"testpassword123","invite":"invite123"}"#;
-		let schema: RegisterSchema = serde_json::from_str(json_str).unwrap();
-
-		assert_eq!(schema.tos_consent, true);
-		assert_eq!(schema.local_name, "testuser");
-		assert_eq!(schema.password, "testpassword123");
-		assert_eq!(schema.invite, Some("invite123".to_string()));
-	}
 
 	#[test]
 	fn test_nist_password_requirements_valid_password() {
