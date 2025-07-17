@@ -88,12 +88,18 @@ mod tests {
 		let context = error.context.unwrap();
 		assert_eq!(context.field_name, "password");
 		assert_eq!(context.found, "7 characters");
-		assert_eq!(context.expected, "More than 7 and less than 65 characters");
+		assert_eq!(
+			context.expected,
+			format!(
+				"More than 7 and less than {} characters",
+				MAX_PERMITTED_PASSWORD_LEN.saturating_add(1)
+			)
+		);
 	}
 
 	#[test]
 	fn test_nist_password_requirements_too_long() {
-		let long_password = "a".repeat(65);
+		let long_password = "a".repeat(129);
 		let result = NISTPasswordRequirements::verify_requirements(&long_password);
 		assert!(result.is_err());
 		let error = result.unwrap_err();
@@ -101,8 +107,14 @@ mod tests {
 		assert!(error.context.is_some());
 		let context = error.context.unwrap();
 		assert_eq!(context.field_name, "password");
-		assert_eq!(context.found, "65 characters");
-		assert_eq!(context.expected, "More than 7 and less than 65 characters");
+		assert_eq!(context.found, "129 characters");
+		assert_eq!(
+			context.expected,
+			format!(
+				"More than 7 and less than {} characters",
+				MAX_PERMITTED_PASSWORD_LEN.saturating_add(1)
+			)
+		);
 	}
 
 	#[test]
@@ -115,7 +127,13 @@ mod tests {
 		let context = error.context.unwrap();
 		assert_eq!(context.field_name, "password");
 		assert_eq!(context.found, "0 characters");
-		assert_eq!(context.expected, "More than 7 and less than 65 characters");
+		assert_eq!(
+			context.expected,
+			format!(
+				"More than 7 and less than {} characters",
+				MAX_PERMITTED_PASSWORD_LEN.saturating_add(1)
+			)
+		);
 	}
 
 	#[test]
@@ -168,20 +186,16 @@ mod tests {
 
 	#[test]
 	fn test_nist_password_requirements_boundary_values() {
-		// Test exactly 8 characters
 		let min_valid = "12345678";
 		assert!(NISTPasswordRequirements::verify_requirements(min_valid).is_ok());
 
-		// Test exactly 64 characters
-		let max_valid = "a".repeat(64);
+		let max_valid = "a".repeat(MAX_PERMITTED_PASSWORD_LEN);
 		assert!(NISTPasswordRequirements::verify_requirements(&max_valid).is_ok());
 
-		// Test exactly 7 characters (should fail)
 		let too_short = "1234567";
 		assert!(NISTPasswordRequirements::verify_requirements(too_short).is_err());
 
-		// Test exactly 65 characters (should fail)
-		let too_long = "a".repeat(65);
+		let too_long = "a".repeat(MAX_PERMITTED_PASSWORD_LEN.saturating_add(1));
 		assert!(NISTPasswordRequirements::verify_requirements(&too_long).is_err());
 	}
 }

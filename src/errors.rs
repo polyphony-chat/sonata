@@ -178,15 +178,19 @@ impl ResponseError for Errcode {
 /// only supplied 6 characters, while 8 were required.
 pub struct Context {
 	#[serde(skip_serializing_if = "String::is_empty")]
+	#[serde(default)]
 	/// The name of the request body field which caused the error
 	pub field_name: String,
 	#[serde(skip_serializing_if = "String::is_empty")]
+	#[serde(default)]
 	/// The value that was found to be fault inside the `field_name`
 	pub found: String,
 	#[serde(skip_serializing_if = "String::is_empty")]
+	#[serde(default)]
 	/// The value that was expected
 	pub expected: String,
 	#[serde(skip_serializing_if = "String::is_empty")]
+	#[serde(default)]
 	/// An optional, additional, human-readable error message
 	pub message: String,
 }
@@ -214,7 +218,7 @@ mod tests {
 
 	#[test]
 	fn test_error_serialization() {
-		let context = Context::new(Some("field"), Some("value"), Some("expected"), None);
+		let context = Context::new(Some("field"), Some("value"), Some("expected"), Some("message"));
 		let error = Error::new(Errcode::IllegalInput, Some(context));
 
 		let serialized = serde_json::to_string(&error).unwrap();
@@ -229,5 +233,6 @@ mod tests {
 		assert_eq!(ctx.field_name, "field");
 		assert_eq!(ctx.found, "value");
 		assert_eq!(ctx.expected, "expected");
+		assert_eq!(ctx.message, "message");
 	}
 }
