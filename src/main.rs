@@ -27,14 +27,17 @@ mod api;
 pub(crate) mod cli;
 /// Module for parsing and interpreting the sonata config file.
 pub(crate) mod config;
+/// Implementations of the required cryptographic traits of polyproto-rs. WE ARE
+/// **NOT** DOING OUR OWN CRYPTO.
+pub(crate) mod crypto;
 /// Module defining PostgreSQL database entities as Rust structs and providing
 /// CRUD functionality
 pub(crate) mod database;
-/// Module housing the WebSocket Gateway logic
-mod gateway;
 
 /// Finer-grained error types for sonata.
 pub(crate) mod errors;
+/// Module housing the WebSocket Gateway logic
+mod gateway;
 
 use crate::database::{
 	api_keys::{self, ApiKey},

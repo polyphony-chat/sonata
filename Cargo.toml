@@ -36,6 +36,7 @@ zeroize = { version = "1.8.1", features = ["derive"] }
 blake3 = "1.8.2"
 argon2 = "0.5.3"
 strum = { version = "0.27.1", features = ["derive"] }
+ed25519-dalek = { version = "2.2.0", features = ["signature", "rand_core"] }
 
 [dev-dependencies]
 tokio-test = "0.4"
