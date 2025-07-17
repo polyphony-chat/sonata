@@ -33,7 +33,7 @@ impl From<LocalActor> for Actor {
 }
 
 #[derive(Debug, sqlx::Decode, sqlx::Encode, sqlx::FromRow)]
-/// Actors from this home server.
+/// Actors from this home server. Does not include the `password_hash` column.
 pub struct LocalActor {
 	/// The unique actor identifer. Does not change, even if the `local_name`
 	/// changes.
@@ -75,6 +75,28 @@ impl LocalActor {
 		}))
 	}
 
+	/// Returns the `password_hash` of an actor from the [Database] where
+	/// `local_name` is equal to `name`, returning `None`, if such an actor
+	/// does not exist.
+	///
+	/// ## Errors
+	///
+	/// Will error on Database connection issues and on other errors with the
+	/// database, all of which are not in scope for this function to handle.
+	pub async fn get_password_hash(db: &Database, name: &str) -> Result<Option<String>, Error> {
+		Ok(query!(
+			"
+            SELECT password_hash
+            FROM local_actors
+            WHERE local_name = $1
+            LIMIT 1",
+			name
+		)
+		.fetch_optional(&db.pool)
+		.await?
+		.map(|record| record.password_hash))
+	}
+
 	/// Create a new [LocalActor] in the `local_actors` table of the [Database].
 	/// Before creating, checks, if a user specified by `local_name` already
 	/// exists in the table, returning an [Errcode::Duplicate]-type error, if
@@ -92,7 +114,7 @@ impl LocalActor {
 		if LocalActor::by_local_name(db, local_name).await?.is_some() {
 			Err(Error::new(
 				Errcode::Duplicate,
-				Some(Context::new(Some("local_name"), Some(local_name), None)),
+				Some(Context::new(Some("local_name"), Some(local_name), None, None)),
 			))
 		} else {
 			let uaid = query!("INSERT INTO actors (type) VALUES ('local') RETURNING uaid")
