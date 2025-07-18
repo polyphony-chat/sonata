@@ -97,11 +97,23 @@ impl Error {
 	/// attacker with information about internal state they are not supposed to
 	/// know about.
 	#[must_use = "Not returning this variant as a response opens up the possibility of leaking internal state!"]
-	pub fn invalid_login() -> Self {
+	pub fn new_invalid_login() -> Self {
 		Error::new(
 			Errcode::Unauthorized,
 			Some(Context::new(None, None, None, Some(ERROR_WRONG_LOGIN))),
 		)
+	}
+
+	/// Creates a variant of [Self] with an [Errcode] of `Errcode::Internal` and
+	/// an optional, given message.
+	pub fn new_internal_error(message: Option<&str>) -> Self {
+		Self::new(Errcode::Internal, Some(Context::new(None, None, None, message)))
+	}
+
+	/// Creates a variant of [Self] with an [Errcode] of `Errcode::Duplicate`
+	/// and an optional, given message.
+	pub fn new_duplicate_error(message: Option<&str>) -> Self {
+		Self::new(Errcode::Duplicate, Some(Context::new(None, None, None, message)))
 	}
 }
 
