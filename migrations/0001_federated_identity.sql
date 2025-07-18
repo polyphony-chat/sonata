@@ -17,22 +17,6 @@ CREATE TABLE IF NOT EXISTS public_keys (
 
 COMMENT ON TABLE public_keys IS 'Public keys of both actors, cached actors and home servers, including this home server.';
 
-CREATE TABLE IF NOT EXISTS subjects (
-    uaid UUID PRIMARY KEY REFERENCES local_actors (uaid),
-    domain_components TEXT [] NOT NULL,
-    pem_encoded TEXT UNIQUE NOT NULL
-);
-
-COMMENT ON TABLE subjects IS 'Subjects.';
-
-CREATE TABLE IF NOT EXISTS issuers (
-    id BIGSERIAL PRIMARY KEY,
-    domain_components TEXT [] NOT NULL,
-    pem_encoded TEXT UNIQUE NOT NULL
-);
-
-COMMENT ON TABLE issuers IS 'Issuers. Deduplicates issuer entries. Especially helpful, if the domain of this home server changes.';
-
 CREATE TABLE IF NOT EXISTS idcsr (
     id BIGSERIAL PRIMARY KEY,
     serial_number NUMERIC(49, 0) UNIQUE NOT NULL,
@@ -48,6 +32,14 @@ CREATE TABLE IF NOT EXISTS idcsr (
 
 COMMENT ON TABLE idcsr IS 'ID-CSRs.';
 COMMENT ON COLUMN idcsr.serial_number IS 'To be generated via a CSPRNG. Serial numbers must not be used for cryptographic purposes';
+
+CREATE TABLE IF NOT EXISTS issuers (
+    id BIGSERIAL PRIMARY KEY,
+    domain_components TEXT [] NOT NULL,
+    pem_encoded TEXT UNIQUE NOT NULL REFERENCES idcsr (pem_encoded)
+);
+
+COMMENT ON TABLE issuers IS 'Issuers. Deduplicates issuer entries. Especially helpful, if the domain of this home server changes.';
 
 CREATE TABLE IF NOT EXISTS invalidated_certs (
     id BIGSERIAL PRIMARY KEY,
