@@ -35,8 +35,7 @@ COMMENT ON COLUMN idcsr.serial_number IS 'To be generated via a CSPRNG. Serial n
 
 CREATE TABLE IF NOT EXISTS issuers (
     id BIGSERIAL PRIMARY KEY,
-    domain_components TEXT [] NOT NULL,
-    pem_encoded TEXT UNIQUE NOT NULL REFERENCES idcsr (pem_encoded)
+    domain_components TEXT [] NOT NULL
 );
 
 COMMENT ON TABLE issuers IS 'Issuers. Deduplicates issuer entries. Especially helpful, if the domain of this home server changes.';

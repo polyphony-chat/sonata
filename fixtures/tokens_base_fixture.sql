@@ -46,9 +46,9 @@ INSERT INTO idcsr (
 (6, 55555555555555555556, '00000000-0000-0000-0000-000000000004', 6, 'test_signature_4_b', 'test_session_4_b', NOW() - INTERVAL '1 day', NOW() + INTERVAL '1 day', 'test_extensions_4_b', 'test_csr_pem_4_b');
 
 -- Test issuers (must be inserted after idcsr because of foreign key constraint)
-INSERT INTO issuers (id, domain_components, pem_encoded) VALUES
-(1, ARRAY['example', 'com'], 'test_csr_pem_1'),
-(2, ARRAY['test', 'org'], 'test_csr_pem_2');
+INSERT INTO issuers (id, domain_components) VALUES
+(1, ARRAY['example', 'com']),
+(2, ARRAY['test', 'org']);
 
 -- Test ID-Certs
 -- User 1 and 2 have certificates (for basic scenarios)
