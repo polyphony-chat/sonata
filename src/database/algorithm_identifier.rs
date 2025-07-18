@@ -13,6 +13,7 @@ pub(crate) struct AlgorithmIdentifier {
 	pub(crate) parameters: Option<String>,
 }
 
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl AlgorithmIdentifier {
 	/// Tries to find an entry or entries from the `algorithm_identifiers` table
 	/// matching the given parameter(s). The more parameters given, the more

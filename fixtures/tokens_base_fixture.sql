@@ -31,11 +31,6 @@ INSERT INTO public_keys (id, uaid, pubkey, algorithm_identifier) VALUES
 (5, '00000000-0000-0000-0000-000000000001', 'test_pubkey_1_b', 1),
 (6, '00000000-0000-0000-0000-000000000004', 'test_pubkey_4_b', 1);
 
--- Test issuers
-INSERT INTO issuers (id, domain_components, pem_encoded) VALUES
-(1, ARRAY['example', 'com'], 'test_issuer_pem_1'),
-(2, ARRAY['test', 'org'], 'test_issuer_pem_2');
-
 -- Test ID-CSRs (for all test users)
 INSERT INTO idcsr (
     id, serial_number, uaid, actor_public_key_id, actor_signature,
@@ -49,6 +44,11 @@ INSERT INTO idcsr (
 (5, 12345678901234567891, '00000000-0000-0000-0000-000000000001', 5, 'test_signature_1_b', 'test_session_1_b', NOW() - INTERVAL '1 day', NOW() + INTERVAL '1 day', 'test_extensions_1_b', 'test_csr_pem_1_b'),
 -- Additional ID-CSR with unique serial number for user 4 (for testing expired tokens)
 (6, 55555555555555555556, '00000000-0000-0000-0000-000000000004', 6, 'test_signature_4_b', 'test_session_4_b', NOW() - INTERVAL '1 day', NOW() + INTERVAL '1 day', 'test_extensions_4_b', 'test_csr_pem_4_b');
+
+-- Test issuers (must be inserted after idcsr because of foreign key constraint)
+INSERT INTO issuers (id, domain_components, pem_encoded) VALUES
+(1, ARRAY['example', 'com'], 'test_csr_pem_1'),
+(2, ARRAY['test', 'org'], 'test_csr_pem_2');
 
 -- Test ID-Certs
 -- User 1 and 2 have certificates (for basic scenarios)

@@ -11,6 +11,7 @@ use crate::{
 };
 
 /// Create an invite.
+#[cfg_attr(coverage_nightly, coverage(off))]
 pub(super) async fn create_invite(
 	owner: Option<&Uuid>,
 	code: Option<&str>,

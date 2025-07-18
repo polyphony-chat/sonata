@@ -247,4 +247,173 @@ mod tests {
 		assert_eq!(ctx.expected, "expected");
 		assert_eq!(ctx.message, "message");
 	}
+
+	#[test]
+	fn test_error_without_context() {
+		let error = Error::new(Errcode::Internal, None);
+
+		assert_eq!(error.code, Errcode::Internal);
+		assert_eq!(
+			error.message,
+			"An internal error has occurred and this request cannot be processed further"
+		);
+		assert!(error.context.is_none());
+	}
+
+	#[test]
+	fn test_error_to_json() {
+		let context = Context::new(Some("username"), Some("admin"), Some("valid username"), None);
+		let error = Error::new(Errcode::Duplicate, Some(context));
+
+		let json = error.to_json();
+		assert!(json.contains("P2_CORE_DUPLICATE"));
+		assert!(json.contains("username"));
+		assert!(json.contains("admin"));
+		assert!(json.contains("valid username"));
+	}
+
+	#[test]
+	fn test_error_new_invalid_login() {
+		let error = Error::new_invalid_login();
+
+		assert_eq!(error.code, Errcode::Unauthorized);
+		assert_eq!(
+			error.message,
+			"This action requires authorization, proof of which was not granted"
+		);
+		assert!(error.context.is_some());
+		let ctx = error.context.unwrap();
+		assert_eq!(ctx.message, ERROR_WRONG_LOGIN);
+	}
+
+	#[test]
+	fn test_error_new_internal_error() {
+		let error = Error::new_internal_error(Some("Database connection failed"));
+
+		assert_eq!(error.code, Errcode::Internal);
+		assert!(error.context.is_some());
+		let ctx = error.context.unwrap();
+		assert_eq!(ctx.message, "Database connection failed");
+	}
+
+	#[test]
+	fn test_error_new_duplicate_error() {
+		let error = Error::new_duplicate_error(Some("User already exists"));
+
+		assert_eq!(error.code, Errcode::Duplicate);
+		assert!(error.context.is_some());
+		let ctx = error.context.unwrap();
+		assert_eq!(ctx.message, "User already exists");
+	}
+
+	#[test]
+	fn test_errcode_messages() {
+		assert_eq!(
+			Errcode::Internal.message(),
+			"An internal error has occurred and this request cannot be processed further"
+		);
+		assert_eq!(
+			Errcode::Unauthorized.message(),
+			"This action requires authorization, proof of which was not granted"
+		);
+		assert_eq!(
+			Errcode::Duplicate.message(),
+			"Creation of the resource is not possible, as it already exists"
+		);
+		assert_eq!(
+			Errcode::IllegalInput.message(),
+			"The overall input is well-formed, but one or more of the input fields fail validation criteria"
+		);
+	}
+
+	#[test]
+	fn test_errcode_status_codes() {
+		use poem::http::StatusCode;
+
+		assert_eq!(Errcode::Internal.status(), StatusCode::INTERNAL_SERVER_ERROR);
+		assert_eq!(Errcode::Unauthorized.status(), StatusCode::UNAUTHORIZED);
+		assert_eq!(Errcode::Duplicate.status(), StatusCode::CONFLICT);
+		assert_eq!(Errcode::IllegalInput.status(), StatusCode::BAD_REQUEST);
+	}
+
+	#[test]
+	fn test_errcode_serialization() {
+		let internal = Errcode::Internal;
+		let serialized = serde_json::to_string(&internal).unwrap();
+		assert_eq!(serialized, "\"P2_CORE_INTERNAL\"");
+
+		let deserialized: Errcode = serde_json::from_str(&serialized).unwrap();
+		assert_eq!(deserialized, Errcode::Internal);
+	}
+
+	#[test]
+	fn test_context_new() {
+		let context =
+			Context::new(Some("password"), Some("weak"), Some("strong"), Some("Password too weak"));
+
+		assert_eq!(context.field_name, "password");
+		assert_eq!(context.found, "weak");
+		assert_eq!(context.expected, "strong");
+		assert_eq!(context.message, "Password too weak");
+	}
+
+	#[test]
+	fn test_context_new_with_none_values() {
+		let context = Context::new(None, None, None, Some("General error"));
+
+		assert!(context.field_name.is_empty());
+		assert!(context.found.is_empty());
+		assert!(context.expected.is_empty());
+		assert_eq!(context.message, "General error");
+	}
+
+	#[test]
+	fn test_error_into_response() {
+		let error = Error::new(Errcode::IllegalInput, None);
+		let response = error.into_response();
+
+		assert_eq!(response.status(), poem::http::StatusCode::BAD_REQUEST);
+		assert_eq!(response.headers().get("content-type").unwrap(), "application/json");
+	}
+
+	#[test]
+	fn test_error_from_sqlx_error() {
+		use sqlx::Error as SqlxError;
+
+		let sqlx_error = SqlxError::RowNotFound;
+		let error: Error = sqlx_error.into();
+
+		assert_eq!(error.code, Errcode::Internal);
+		assert!(error.context.is_none());
+	}
+
+	#[test]
+	fn test_error_into_poem_error() {
+		let error = Error::new(Errcode::Unauthorized, None);
+		let poem_error: poem::Error = error.into();
+
+		// We can't directly test the poem::Error contents, but we can ensure the
+		// conversion works
+		assert_eq!(poem_error.status(), poem::http::StatusCode::UNAUTHORIZED);
+	}
+
+	#[test]
+	fn test_errcode_display() {
+		assert_eq!(Errcode::Internal.to_string(), "P2_CORE_INTERNAL");
+		assert_eq!(Errcode::Unauthorized.to_string(), "P2_CORE_UNAUTHORIZED");
+		assert_eq!(Errcode::Duplicate.to_string(), "P2_CORE_DUPLICATE");
+		assert_eq!(Errcode::IllegalInput.to_string(), "P2_CORE_ILLEGAL_INPUT");
+	}
+
+	#[test]
+	fn test_errcode_from_str() {
+		use std::str::FromStr;
+
+		assert_eq!(Errcode::from_str("P2_CORE_INTERNAL").unwrap(), Errcode::Internal);
+		assert_eq!(Errcode::from_str("P2_CORE_UNAUTHORIZED").unwrap(), Errcode::Unauthorized);
+		assert_eq!(Errcode::from_str("P2_CORE_DUPLICATE").unwrap(), Errcode::Duplicate);
+		assert_eq!(Errcode::from_str("P2_CORE_ILLEGAL_INPUT").unwrap(), Errcode::IllegalInput);
+
+		assert!(Errcode::from_str("INVALID_CODE").is_err());
+	}
 }

@@ -14,6 +14,7 @@ pub(crate) struct Issuer {
 	pub(crate) id_cert: IdCert<DigitalSignature, DigitalPublicKey>,
 }
 
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl Issuer {
 	/// Create (insert) the issuer entry for this sonata instance. Returns
 	/// `None`, if there is already a valid issuer entry for the given point in

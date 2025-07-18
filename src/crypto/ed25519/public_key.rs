@@ -8,6 +8,7 @@ pub(crate) struct DigitalPublicKey {
 	key: VerifyingKey,
 }
 
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl PublicKey<DigitalSignature> for DigitalPublicKey {
 	fn verify_signature(
 		&self,
@@ -39,6 +40,7 @@ impl PublicKey<DigitalSignature> for DigitalPublicKey {
 		}
 	}
 
+	#[cfg_attr(coverage_nightly, coverage(off))]
 	fn try_from_public_key_info(
 		public_key_info: polyproto::certs::PublicKeyInfo,
 	) -> Result<Self, polyproto::errors::CertificateConversionError> {

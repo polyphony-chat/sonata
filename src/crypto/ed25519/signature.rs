@@ -15,18 +15,21 @@ pub(crate) struct DigitalSignature {
 	pub(super) signature: ed25519_dalek::Signature,
 }
 
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl SignatureBitStringEncoding for DigitalSignature {
 	fn to_bitstring(&self) -> polyproto::der::Result<BitString> {
 		BitString::from_bytes(&self.as_signature().to_bytes())
 	}
 }
 
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl std::fmt::Display for DigitalSignature {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		f.write_str(&self.signature.to_string())
 	}
 }
 
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl SignatureTrait for DigitalSignature {
 	type Signature = ed25519_dalek::Signature;
 

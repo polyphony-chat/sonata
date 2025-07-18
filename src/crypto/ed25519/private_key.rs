@@ -9,6 +9,7 @@ pub(crate) struct DigitalPrivateKey {
 	pubkey: DigitalPublicKey,
 }
 
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl PrivateKey<DigitalSignature> for DigitalPrivateKey {
 	type PublicKey = DigitalPublicKey;
 

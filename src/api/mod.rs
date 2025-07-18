@@ -4,20 +4,15 @@
 
 use log::info;
 use poem::{
-	EndpointExt, IntoResponse, Response, Route, Server,
-	error::ResponseError,
-	handler,
+	EndpointExt, IntoResponse, Response, Route, Server, handler,
 	http::{Method, StatusCode},
 	listener::TcpListener,
 	middleware::{Cors, NormalizePath},
-	web::Json,
 };
-use serde_json::json;
 
 use crate::{
 	config::ApiConfig,
 	database::{Database, tokens::TokenStore},
-	errors::Error,
 };
 
 /// Admin-only functionality.

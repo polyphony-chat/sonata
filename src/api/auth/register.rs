@@ -16,8 +16,8 @@ use crate::{
 	errors::{Context, Errcode, Error},
 };
 
-#[cfg_attr(coverage_nightly, coverage(off))]
 #[handler]
+#[cfg_attr(coverage_nightly, coverage(off))]
 pub(super) async fn register(
 	Json(payload): Json<RegisterSchema>,
 	Data(db): Data<&Database>,

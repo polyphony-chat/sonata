@@ -15,6 +15,7 @@ use crate::{
 };
 
 #[handler]
+#[cfg_attr(coverage_nightly, coverage(off))]
 pub(super) async fn login(
 	Json(payload): Json<LoginSchema>,
 	Data(db): Data<&Database>,
