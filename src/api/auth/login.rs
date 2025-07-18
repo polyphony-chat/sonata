@@ -33,13 +33,13 @@ pub(super) async fn login(
 	}
 	let local_actor = match LocalActor::by_local_name(db, &payload.local_name).await? {
 		Some(actor) => actor,
-		None => return Err(Error::invalid_login()),
+		None => return Err(Error::new_invalid_login()),
 	};
 	let actor_password_hashstring =
 		match LocalActor::get_password_hash(db, &payload.local_name).await? {
 			Some(hash_string) => hash_string,
 			None => {
-				return Err(Error::invalid_login());
+				return Err(Error::new_invalid_login());
 			}
 		};
 	let actor_password_hash = PasswordHash::new(&actor_password_hashstring).map_err(|e| {
@@ -51,7 +51,7 @@ pub(super) async fn login(
 	})?;
 	Argon2::default()
 		.verify_password(payload.password.as_bytes(), &actor_password_hash)
-		.map_err(|_| Error::invalid_login())?;
+		.map_err(|_| Error::new_invalid_login())?;
 	let token =
 		token_store.generate_upsert_token(&local_actor.unique_actor_identifier, None).await?;
 	Ok(Response::builder().status(StatusCode::OK).body(json!({"token": token}).to_string()))
