@@ -14,6 +14,7 @@ use std::{path::PathBuf, str::FromStr};
 
 use clap::Parser;
 use log::{LevelFilter, debug, error, info, trace};
+use polyproto::signature::Signature;
 use sqlx::query_scalar;
 
 /// The maximum password length this server allows. Passwords longer than this
@@ -39,11 +40,15 @@ pub(crate) mod errors;
 /// Module housing the WebSocket Gateway logic
 mod gateway;
 
-use crate::database::{
-	api_keys::{self, ApiKey},
-	tokens::TokenStore,
-};
 pub(crate) use crate::errors::{StdError, StdResult};
+use crate::{
+	crypto::ed25519::DigitalSignature,
+	database::{
+		algorithm_identifier::AlgorithmIdentifier,
+		api_keys::{self, ApiKey},
+		tokens::TokenStore,
+	},
+};
 
 #[tokio::main]
 #[cfg_attr(coverage_nightly, coverage(off))]
@@ -124,6 +129,23 @@ async fn main() -> StdResult<()> {
 			info!("Save this API key, as it will not be shown again on future starts.");
 		}
 		_ => (),
+	};
+	debug!("Inserting known algorithm identifiers into algorithm_identifiers table...");
+	match AlgorithmIdentifier::try_insert(
+		&database,
+		&DigitalSignature::algorithm_identifier().oid,
+		Some("Edwards-curve Digital Signature Algorithm (EdDSA) Ed25519"),
+		None,
+	)
+	.await
+	{
+		Ok(a_id) => debug!("Inserted algorithm_identifier {}", a_id.algorithm_identifier),
+		Err(e) => match e.code {
+			errors::Errcode::Duplicate => {
+				debug!("Algorithm identifier already present, nothing changed")
+			}
+			_ => error!("Could not manipulate database: {e:?}"),
+		},
 	};
 
 	let token_store = TokenStore::new(database.clone());
