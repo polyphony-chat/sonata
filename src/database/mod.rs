@@ -9,7 +9,10 @@ use sqlx::{
 
 use crate::{StdResult, config::DatabaseConfig};
 
+pub(crate) mod algorithm_identifier;
 pub(crate) mod api_keys;
+pub(crate) mod idcert;
+pub(crate) mod issuer;
 pub(crate) mod keytrials;
 pub(crate) mod models;
 pub(crate) mod serial_number;
