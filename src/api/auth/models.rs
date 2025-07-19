@@ -43,6 +43,12 @@ pub struct LoginSchema {
 }
 
 #[cfg(test)]
+#[allow(
+	clippy::unwrap_used,
+	clippy::str_to_string,
+	clippy::indexing_slicing,
+	clippy::bool_assert_comparison
+)]
 mod test {
 	use super::*;
 	#[test]
