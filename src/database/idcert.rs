@@ -11,7 +11,7 @@ use sqlx::query;
 
 use crate::{
 	database::{AlgorithmIdentifier, Database, Issuer},
-	errors::{Context, Error},
+	errors::{ALGORITHM_IDENTIFER_TO_DER_ERROR_MESSAGE, Context, Error},
 };
 
 pub(crate) struct HomeServerCert;
@@ -90,12 +90,12 @@ impl HomeServerCert {
 		let oid_signature_algo = S::algorithm_identifier().oid;
 		let params_signature_algo = match S::algorithm_identifier().parameters {
 			Some(params) => params.to_der().map_err(|e| {
-				error!("Error encoding signature algorithm parameters to DER: {e}");
+				error!("{ALGORITHM_IDENTIFER_TO_DER_ERROR_MESSAGE} {e}");
 				Error::new_internal_error(None)
 			})?,
 			None => Vec::new(),
 		};
-		let Some(algorithm_identifier) = AlgorithmIdentifier::get_by(
+		let Some(algorithm_identifier) = AlgorithmIdentifier::get_by_query(
 			db,
 			None,
 			None,
