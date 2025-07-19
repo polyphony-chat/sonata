@@ -10,7 +10,7 @@ use polyproto::{
 use sqlx::query;
 
 use crate::{
-	database::{AlgorithmIdentifier, Database},
+	database::{AlgorithmIdentifier, Database, Issuer},
 	errors::{Context, Error},
 };
 
@@ -110,11 +110,16 @@ impl HomeServerCert {
 					None,
 					None,
 					None,
-					Some("ID-Cert contained cryptographic algorithms not supported by this server"),
+					Some("ID-Cert contains cryptographic algorithms not supported by this server"),
 				)),
 			));
 		};
-		cert.id_cert_tbs;
+		#[allow(clippy::expect_used)]
+		// This event should never happen and, as far as I am aware, cannot be triggered by any
+		// user. As such, I see it ok to unwrap here.
+		let issuer = Issuer::get_own(db).await?.expect(
+			"The issuer entry for this sonata instance should have been added to the database on startup!",
+		);
 		todo!()
 	}
 }
