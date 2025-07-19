@@ -10,7 +10,7 @@
  * A robust, performant polyproto home server.
  */
 
-use std::{path::PathBuf, str::FromStr};
+use std::{path::PathBuf, process::exit, str::FromStr};
 
 use clap::Parser;
 use log::{LevelFilter, debug, error, info, trace};
@@ -44,6 +44,7 @@ pub(crate) use crate::errors::{StdError, StdResult};
 use crate::{
 	crypto::ed25519::DigitalSignature,
 	database::{
+		Issuer,
 		algorithm_identifier::AlgorithmIdentifier,
 		api_keys::{self, ApiKey},
 		tokens::TokenStore,
@@ -155,6 +156,19 @@ async fn main() -> StdResult<()> {
 			_ => error!("Could not manipulate database: {e:?}"),
 		},
 	};
+	debug!("Inserting own issuer domain name into the database...");
+	match Issuer::create_own(&database).await {
+		Ok(i) => match i {
+			Some(issuer) => {
+				debug!(r#"Inserted own issuer "{}" into the database!"#, issuer.domain_components)
+			}
+			None => debug!("Issuer entry already present, nothing changed"),
+		},
+		Err(e) => {
+			error!("Could not manipulate database: {e:?}");
+			exit(5)
+		}
+	}
 
 	let token_store = TokenStore::new(database.clone());
 
