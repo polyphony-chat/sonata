@@ -16,6 +16,7 @@ pub(crate) mod idcert;
 pub(crate) mod invite;
 pub(crate) mod issuer;
 pub(crate) mod keytrials;
+pub(crate) mod public_key_info;
 pub(crate) mod serial_number;
 pub(crate) mod tokens;
 
@@ -26,6 +27,7 @@ pub(crate) use idcert::*;
 pub(crate) use invite::*;
 pub(crate) use issuer::*;
 pub(crate) use keytrials::*;
+pub(crate) use public_key_info::*;
 pub(crate) use serial_number::*;
 pub(crate) use tokens::*;
 
