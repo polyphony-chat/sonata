@@ -38,6 +38,7 @@ blake3 = "1.8.2"
 argon2 = "0.5.3"
 strum = { version = "0.27.1", features = ["derive"] }
 ed25519-dalek = { version = "2.2.0", features = ["signature", "rand_core"] }
+hex = "0.4.3"
 
 [build-dependencies]
 vergen = { version = "9.0.0", features = ["build"] }
