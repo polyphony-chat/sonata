@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n\t\t\tINSERT INTO issuers (domain_components)\n\t\t\tVALUES ($1)\n\t\t\tON CONFLICT (domain_components) DO NOTHING\n\t\t\tRETURNING id, domain_components\n\t\t",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "domain_components",
+        "type_info": "TextArray"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "8c06ef8a5c0bf0b3eac748ac96a9bbde99fdba3e3c0f8073cd9c99bdc27cdbbf"
+}

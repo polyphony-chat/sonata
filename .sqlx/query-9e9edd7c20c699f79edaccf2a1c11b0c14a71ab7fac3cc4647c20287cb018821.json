@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT id, algorithm_identifier, common_name, parameters\n            FROM algorithm_identifiers\n            WHERE\n                ($1::int IS NULL OR id = $1)\n                AND ($2::text IS NULL OR algorithm_identifier = $2)\n                AND ($3::text IS NULL OR common_name = $3)\n                AND ($4::text IS NULL OR parameters = $4)\n            ",
+  "query": "\n        INSERT INTO algorithm_identifiers (algorithm_identifier, common_name, parameters_der_encoded)\n        VALUES ($1, $2::text, $3::smallint [])\n        ON CONFLICT DO NOTHING RETURNING id, algorithm_identifier, common_name, parameters_der_encoded\n        ",
   "describe": {
     "columns": [
       {
@@ -20,16 +20,15 @@
       },
       {
         "ordinal": 3,
-        "name": "parameters",
-        "type_info": "Text"
+        "name": "parameters_der_encoded",
+        "type_info": "Int2Array"
       }
     ],
     "parameters": {
       "Left": [
-        "Int4",
         "Text",
         "Text",
-        "Text"
+        "Int2Array"
       ]
     },
     "nullable": [
@@ -39,5 +38,5 @@
       true
     ]
   },
-  "hash": "68537c103542356678b7748988bd255e5ff974ebb65cf4f804a63d268c59194a"
+  "hash": "9e9edd7c20c699f79edaccf2a1c11b0c14a71ab7fac3cc4647c20287cb018821"
 }
