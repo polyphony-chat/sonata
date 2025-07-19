@@ -2,16 +2,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use chrono::NaiveDateTime;
 use sqlx::{query, query_as, types::Uuid};
 
 use crate::{
 	database::Database,
 	errors::{Context, Errcode, Error},
 };
-
-#[derive(sqlx::FromRow, sqlx::Type)]
-pub struct PemEncoded(String);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ActorType {
@@ -131,80 +127,13 @@ impl LocalActor {
 	}
 }
 
-#[derive(sqlx::Decode, sqlx::Encode, sqlx::FromRow)]
-pub struct AlgorithmIdentifier {
-	pub id: i32,
-	pub algorithm_identifier_oid: String,
-	pub common_name: Option<String>,
-	pub parameters: Option<String>,
-}
-
-#[derive(sqlx::Decode, sqlx::Encode, sqlx::FromRow)]
-pub struct PublicKey {
-	pub id: i64,
-	pub belongs_to_actor_identifier: Uuid,
-	pub public_key: String,
-	pub algorithm_identifier_id: i32,
-}
-
-#[derive(sqlx::Decode, sqlx::Encode, sqlx::FromRow)]
-pub struct Subjects {
-	pub actor_unique_identifier: Uuid,
-	pub domain_components: Vec<String>,
-	pub subject_x509_pem: PemEncoded,
-}
-
-#[derive(sqlx::Decode, sqlx::Encode, sqlx::FromRow)]
-pub struct Issuers {
-	pub id: i64,
-	pub domain_components: Vec<String>,
-	pub issuer_x509_pem: PemEncoded,
-}
-
-#[derive(sqlx::Decode, sqlx::Encode, sqlx::FromRow)]
-pub struct IdCsr {
-	pub internal_serial_number: Uuid,
-	pub for_actor_uaid: Uuid,
-	pub actor_public_key_id: i64,
-	pub actor_signature: String,
-	pub session_id: String, // TODO make this serialnumba
-	pub valid_not_before: NaiveDateTime,
-	pub valid_not_after: NaiveDateTime,
-	pub extensions: String,
-	pub pem_encoded: String,
-}
-
-#[derive(sqlx::Decode, sqlx::Encode, sqlx::FromRow)]
-pub struct Invite {
-	pub invite_link_owner: Option<Uuid>,
-	pub usages_current: i32,
-	pub usages_maximum: i32,
-	pub invite_code: String,
-	pub invalid: bool,
-}
-
 #[cfg(test)]
 mod tests {
 	use sqlx::{Pool, Postgres};
 
 	use super::*;
 
-	#[test]
-	fn test_algorithm_identifier_creation() {
-		let algo_id = AlgorithmIdentifier {
-			id: 1,
-			algorithm_identifier_oid: "1.2.840.113549.1.1.11".to_string(),
-			common_name: Some("SHA256withRSA".to_string()),
-			parameters: Some("null".to_string()),
-		};
-
-		assert_eq!(algo_id.id, 1);
-		assert_eq!(algo_id.algorithm_identifier_oid, "1.2.840.113549.1.1.11");
-		assert_eq!(algo_id.common_name, Some("SHA256withRSA".to_string()));
-		assert_eq!(algo_id.parameters, Some("null".to_string()));
-	}
-
-	#[sqlx::test(fixtures("../../../fixtures/local_actor_tests.sql"))]
+	#[sqlx::test(fixtures("../../fixtures/local_actor_tests.sql"))]
 	async fn test_by_local_name_finds_existing_user(pool: Pool<Postgres>) {
 		let db = Database { pool };
 
@@ -220,7 +149,7 @@ mod tests {
 		assert!(!actor.is_deactivated);
 	}
 
-	#[sqlx::test(fixtures("../../../fixtures/local_actor_tests.sql"))]
+	#[sqlx::test(fixtures("../../fixtures/local_actor_tests.sql"))]
 	async fn test_by_local_name_finds_deactivated_user(pool: Pool<Postgres>) {
 		let db = Database { pool };
 
@@ -236,7 +165,7 @@ mod tests {
 		assert!(actor.is_deactivated);
 	}
 
-	#[sqlx::test(fixtures("../../../fixtures/local_actor_tests.sql"))]
+	#[sqlx::test(fixtures("../../fixtures/local_actor_tests.sql"))]
 	async fn test_by_local_name_finds_user_with_special_characters(pool: Pool<Postgres>) {
 		let db = Database { pool };
 
@@ -252,7 +181,7 @@ mod tests {
 		assert!(!actor.is_deactivated);
 	}
 
-	#[sqlx::test(fixtures("../../../fixtures/local_actor_tests.sql"))]
+	#[sqlx::test(fixtures("../../fixtures/local_actor_tests.sql"))]
 	async fn test_by_local_name_returns_none_for_nonexistent_user(pool: Pool<Postgres>) {
 		let db = Database { pool };
 
@@ -260,7 +189,7 @@ mod tests {
 		assert!(result.is_none());
 	}
 
-	#[sqlx::test(fixtures("../../../fixtures/local_actor_tests.sql"))]
+	#[sqlx::test(fixtures("../../fixtures/local_actor_tests.sql"))]
 	async fn test_by_local_name_returns_none_for_empty_string(pool: Pool<Postgres>) {
 		let db = Database { pool };
 
@@ -268,7 +197,7 @@ mod tests {
 		assert!(result.is_none());
 	}
 
-	#[sqlx::test(fixtures("../../../fixtures/local_actor_tests.sql"))]
+	#[sqlx::test(fixtures("../../fixtures/local_actor_tests.sql"))]
 	async fn test_by_local_name_is_case_sensitive(pool: Pool<Postgres>) {
 		let db = Database { pool };
 
@@ -284,7 +213,7 @@ mod tests {
 		assert!(result_mixed.is_none());
 	}
 
-	#[sqlx::test(fixtures("../../../fixtures/local_actor_tests.sql"))]
+	#[sqlx::test(fixtures("../../fixtures/local_actor_tests.sql"))]
 	async fn test_create_new_user_success(pool: Pool<Postgres>) {
 		let db = Database { pool };
 
@@ -303,7 +232,7 @@ mod tests {
 		assert_eq!(found_actor.unique_actor_identifier, actor.unique_actor_identifier);
 	}
 
-	#[sqlx::test(fixtures("../../../fixtures/local_actor_tests.sql"))]
+	#[sqlx::test(fixtures("../../fixtures/local_actor_tests.sql"))]
 	async fn test_create_duplicate_user_returns_error(pool: Pool<Postgres>) {
 		let db = Database { pool };
 
@@ -321,7 +250,7 @@ mod tests {
 		}
 	}
 
-	#[sqlx::test(fixtures("../../../fixtures/local_actor_tests.sql"))]
+	#[sqlx::test(fixtures("../../fixtures/local_actor_tests.sql"))]
 	async fn test_create_duplicate_deactivated_user_returns_error(pool: Pool<Postgres>) {
 		let db = Database { pool };
 
@@ -339,7 +268,7 @@ mod tests {
 		}
 	}
 
-	#[sqlx::test(fixtures("../../../fixtures/local_actor_tests.sql"))]
+	#[sqlx::test(fixtures("../../fixtures/local_actor_tests.sql"))]
 	async fn test_create_user_with_special_characters(pool: Pool<Postgres>) {
 		let db = Database { pool };
 
@@ -354,7 +283,7 @@ mod tests {
 		assert!(found.is_some());
 	}
 
-	#[sqlx::test(fixtures("../../../fixtures/local_actor_tests.sql"))]
+	#[sqlx::test(fixtures("../../fixtures/local_actor_tests.sql"))]
 	async fn test_create_user_with_empty_name(pool: Pool<Postgres>) {
 		let db = Database { pool };
 
@@ -369,7 +298,7 @@ mod tests {
 		assert!(found.is_some());
 	}
 
-	#[sqlx::test(fixtures("../../../fixtures/local_actor_tests.sql"))]
+	#[sqlx::test(fixtures("../../fixtures/local_actor_tests.sql"))]
 	async fn test_create_multiple_users_have_different_uuids(pool: Pool<Postgres>) {
 		let db = Database { pool };
 
@@ -386,7 +315,7 @@ mod tests {
 		assert_ne!(user2.local_name, user3.local_name);
 	}
 
-	#[sqlx::test(fixtures("../../../fixtures/local_actor_tests.sql"))]
+	#[sqlx::test(fixtures("../../fixtures/local_actor_tests.sql"))]
 	async fn test_create_user_sets_joined_timestamp(pool: Pool<Postgres>) {
 		let db = Database { pool };
 

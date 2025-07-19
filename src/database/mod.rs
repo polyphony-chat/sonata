@@ -9,16 +9,25 @@ use sqlx::{
 
 use crate::{StdResult, config::DatabaseConfig};
 
+pub(crate) mod actor;
 pub(crate) mod algorithm_identifier;
 pub(crate) mod api_keys;
 pub(crate) mod idcert;
+pub(crate) mod invite;
 pub(crate) mod issuer;
 pub(crate) mod keytrials;
-pub(crate) mod models;
 pub(crate) mod serial_number;
 pub(crate) mod tokens;
 
-pub(crate) use models::*;
+pub(crate) use actor::*;
+pub(crate) use algorithm_identifier::*;
+pub(crate) use api_keys::*;
+pub(crate) use idcert::*;
+pub(crate) use invite::*;
+pub(crate) use issuer::*;
+pub(crate) use keytrials::*;
+pub(crate) use serial_number::*;
+pub(crate) use tokens::*;
 
 #[derive(Debug, Clone)]
 /// Main Database struct. Wrapper around [PgPool].
