@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO actors (uaid, type) VALUES\n            ('00000000-0000-0000-0000-000000000006', 'local')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "38d45f427e861ba8929b77afe1778aef529b48dd866d2b26141ded6ff9293c53"
+}

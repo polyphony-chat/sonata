@@ -1,3 +1,4 @@
+use log::error;
 use polyproto::spki::ObjectIdentifier;
 use sqlx::query;
 
@@ -10,11 +11,17 @@ pub(crate) struct AlgorithmIdentifier {
 	id: i32,
 	pub(crate) algorithm_identifier: ObjectIdentifier,
 	pub(crate) common_name: Option<String>,
-	pub(crate) parameters: Option<String>,
+	pub(crate) parameters_der_encoded: Option<Vec<u8>>,
 }
 
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl AlgorithmIdentifier {
+	/// Read-only access to the inner ID field, referencing the ID column in the
+	/// database table.
+	pub(crate) fn id(&self) -> i32 {
+		self.id
+	}
+
 	/// Tries to find an entry or entries from the `algorithm_identifiers` table
 	/// matching the given parameter(s). The more parameters given, the more
 	/// narrowed down the set of results.
@@ -35,29 +42,31 @@ impl AlgorithmIdentifier {
 		id: Option<i32>,
 		common_name: Option<&str>,
 		algorithm_identifier: Option<&ObjectIdentifier>,
-		parameters: Option<&str>,
+		parameters_der_encoded: &[u8],
 	) -> Result<Vec<Self>, Error> {
 		if common_name.is_none()
 			&& id.is_none()
 			&& algorithm_identifier.is_none()
-			&& parameters.is_none()
+			&& parameters_der_encoded.is_empty()
 		{
 			return Ok(Vec::new());
 		}
+		let parameters_der_encoded_reformatted =
+			parameters_der_encoded.into_iter().map(|num| *num as i16).collect::<Vec<_>>();
 		let record = query!(
 			r#"
-            SELECT id, algorithm_identifier, common_name, parameters
+            SELECT id, algorithm_identifier, common_name, parameters_der_encoded
             FROM algorithm_identifiers
             WHERE
                 ($1::int IS NULL OR id = $1)
                 AND ($2::text IS NULL OR algorithm_identifier = $2)
                 AND ($3::text IS NULL OR common_name = $3)
-                AND ($4::text IS NULL OR parameters = $4)
+                AND ($4::smallint [] IS NULL OR parameters_der_encoded = $4)
             "#,
 			id,
 			algorithm_identifier.map(|a| a.to_string()),
 			common_name,
-			parameters,
+			&parameters_der_encoded_reformatted,
 		)
 		.fetch_all(&db.pool)
 		.await?;
@@ -69,21 +78,16 @@ impl AlgorithmIdentifier {
 					algorithm_identifier: match ObjectIdentifier::new(&r.algorithm_identifier) {
 						Ok(oid) => oid,
 						Err(e) => {
-							return Err(Error::new(
-								crate::errors::Errcode::Internal,
-								Some(Context::new(
-									None,
-									Some(&r.algorithm_identifier),
-									None,
-									Some(&format!(
-										"Found invalid algorithm_identifier in table algorithm_identifiers: {e}"
-									)),
-								)),
-							));
+							error!(
+								"Found invalid algorithm_identifier in table algorithm_identifiers: {e}"
+							);
+							return Err(Error::new_internal_error(None));
 						}
 					},
 					common_name: r.common_name,
-					parameters: r.parameters,
+					parameters_der_encoded: r
+						.parameters_der_encoded
+						.map(|v| v.into_iter().map(|num| num as u8).collect::<Vec<_>>()),
 				})
 			})
 			.collect::<Vec<_>>();
@@ -110,17 +114,18 @@ impl AlgorithmIdentifier {
 		db: &Database,
 		algorithm_identifier: &ObjectIdentifier,
 		common_name: Option<&str>,
-		parameters: Option<&str>,
+		parameters: &[u8],
 	) -> Result<Self, Error> {
+		let parameters_i16 = parameters.into_iter().map(|num| *num as i16).collect::<Vec<_>>();
 		let record = query!(
 			r#"
-        INSERT INTO algorithm_identifiers (algorithm_identifier, common_name, parameters)
-        VALUES ($1, $2::text, $3::text)
-        ON CONFLICT DO NOTHING RETURNING id, algorithm_identifier, common_name, parameters
+        INSERT INTO algorithm_identifiers (algorithm_identifier, common_name, parameters_der_encoded)
+        VALUES ($1, $2::text, $3::smallint [])
+        ON CONFLICT DO NOTHING RETURNING id, algorithm_identifier, common_name, parameters_der_encoded
         "#,
 			algorithm_identifier.to_string(),
 			common_name,
-			parameters
+			&parameters_i16
 		)
 		.fetch_optional(&db.pool)
 		.await?;
@@ -137,7 +142,9 @@ impl AlgorithmIdentifier {
 					}
 				},
 				common_name: row.common_name,
-				parameters: row.parameters,
+				parameters_der_encoded: row
+					.parameters_der_encoded
+					.map(|inner| inner.into_iter().map(|num| num as u8).collect::<Vec<_>>()),
 			}),
 			None => Err(Error::new_duplicate_error(Some(
 				"The provided algorithm identifier is already present in the database",

@@ -139,7 +139,7 @@ async fn main() -> StdResult<()> {
 		&database,
 		&DigitalSignature::algorithm_identifier().oid,
 		Some("Edwards-curve Digital Signature Algorithm (EdDSA) Ed25519"),
-		None,
+		Default::default(),
 	)
 	.await
 	{

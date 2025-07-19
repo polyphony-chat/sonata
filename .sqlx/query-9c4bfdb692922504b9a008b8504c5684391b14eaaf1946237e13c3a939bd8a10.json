@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": " \n            SELECT id, algorithm_identifier, common_name, parameters_der_encoded\n            FROM algorithm_identifiers\n            WHERE\n                ($1::int IS NULL OR id = $1)\n                AND ($2::text IS NULL OR algorithm_identifier = $2)\n                AND ($3::text IS NULL OR common_name = $3)\n                AND ($4::smallint [] IS NULL OR parameters_der_encoded = $4)\n            ",
+  "query": "\n            SELECT id, algorithm_identifier, common_name, parameters_der_encoded\n            FROM algorithm_identifiers\n            WHERE\n                ($1::int IS NULL OR id = $1)\n                AND ($2::text IS NULL OR algorithm_identifier = $2)\n                AND ($3::text IS NULL OR common_name = $3)\n                AND ($4::smallint [] IS NULL OR parameters_der_encoded = $4)\n            ",
   "describe": {
     "columns": [
       {
@@ -39,5 +39,5 @@
       true
     ]
   },
-  "hash": "3f4a2351ba449e00a54aaa0305162e2cb8b47fcb32c92875b65d257ae536455e"
+  "hash": "9c4bfdb692922504b9a008b8504c5684391b14eaaf1946237e13c3a939bd8a10"
 }
