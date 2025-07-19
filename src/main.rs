@@ -84,6 +84,10 @@ async fn main() -> StdResult<()> {
 		.filter(Some("sonata"), log_level)
 		.try_init()?;
 	debug!("Hello, world!");
+
+	info!("{} v{}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
+	info!("Build Timestamp: {}", env!("VERGEN_BUILD_TIMESTAMP"));
+
 	let config_location = match &Args::get_or_panic().config {
 		Some(path) => path,
 		None => &PathBuf::from_str("sonata.toml")?,
@@ -139,7 +143,11 @@ async fn main() -> StdResult<()> {
 	)
 	.await
 	{
-		Ok(a_id) => debug!("Inserted algorithm_identifier {}", a_id.algorithm_identifier),
+		Ok(a_id) => debug!(
+			"Inserted algorithm_identifier {} {}",
+			a_id.algorithm_identifier,
+			a_id.common_name.unwrap_or_default()
+		),
 		Err(e) => match e.code {
 			errors::Errcode::Duplicate => {
 				debug!("Algorithm identifier already present, nothing changed")

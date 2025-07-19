@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 license = "MPL-2.0"
 authors = ["The Polyphony Project Contributors <info@polyphony.chat>"]
+build = "build.rs"
 
 [dependencies]
 clap = { version = "4.5.41", features = ["derive"] }
@@ -37,6 +38,9 @@ blake3 = "1.8.2"
 argon2 = "0.5.3"
 strum = { version = "0.27.1", features = ["derive"] }
 ed25519-dalek = { version = "2.2.0", features = ["signature", "rand_core"] }
+
+[build-dependencies]
+vergen = { version = "9.0.0", features = ["build"] }
 
 [dev-dependencies]
 tokio-test = "0.4"
