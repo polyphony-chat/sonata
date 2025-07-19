@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        WITH issuer AS (\n            SELECT id\n            FROM issuers\n            WHERE domain_components = $1\n        )\n        SELECT idcert.pem_encoded, idcert.home_server_public_key_id\n        FROM idcert\n        JOIN issuer i ON idcert.issuer_info_id = i.id\n        WHERE (\n            $2 >= valid_not_before AND $2 <= valid_not_after\n        )\n    ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "pem_encoded",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "home_server_public_key_id",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray",
+        "Timestamp"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "5dbb343f1e3975a7a7099d66e16f19e4fc79c87c51b8a19a52d1ca49af007366"
+}
