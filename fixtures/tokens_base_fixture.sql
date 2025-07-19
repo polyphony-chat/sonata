@@ -33,7 +33,7 @@ INSERT INTO public_keys (id, uaid, pubkey, algorithm_identifier) VALUES
 
 -- Test ID-CSRs (for all test users)
 INSERT INTO idcsr (
-    id, serial_number, uaid, actor_public_key_id, actor_signature,
+    id, serial_number, uaid, subject_public_key_id, subject_signature,
     session_id, valid_not_before, valid_not_after, extensions, pem_encoded
 ) VALUES
 (1, 12345678901234567890, '00000000-0000-0000-0000-000000000001', 1, 'test_signature_1', 'test_session_1', NOW() - INTERVAL '1 day', NOW() + INTERVAL '1 day', 'test_extensions_1', 'test_csr_pem_1'),

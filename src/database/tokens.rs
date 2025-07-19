@@ -280,7 +280,7 @@ mod test {
 
 		sqlx::query!(
             "INSERT INTO idcsr (
-                id, serial_number, uaid, actor_public_key_id, actor_signature,
+                id, serial_number, uaid, subject_public_key_id, subject_signature,
                 session_id, valid_not_before, valid_not_after, extensions, pem_encoded
             ) VALUES
             (7, 22222222222222222222, '00000000-0000-0000-0000-000000000005', 7, 'test_signature_7',
@@ -313,7 +313,7 @@ mod test {
 
 		sqlx::query!(
             "INSERT INTO idcsr (
-                id, serial_number, uaid, actor_public_key_id, actor_signature,
+                id, serial_number, uaid, subject_public_key_id, subject_signature,
                 session_id, valid_not_before, valid_not_after, extensions, pem_encoded
             ) VALUES
             (9, 22222222222222222223, '00000000-0000-0000-0000-000000000005', 9, 'test_signature_9',
@@ -386,7 +386,7 @@ mod test {
 
 		sqlx::query!(
             "INSERT INTO idcsr (
-                id, serial_number, uaid, actor_public_key_id, actor_signature,
+                id, serial_number, uaid, subject_public_key_id, subject_signature,
                 session_id, valid_not_before, valid_not_after, extensions, pem_encoded
             ) VALUES
             (8, 33333333333333333333, '00000000-0000-0000-0000-000000000006', 8, 'test_signature_8',

@@ -9,7 +9,7 @@ COMMENT ON TABLE algorithm_identifiers IS 'PKCS #10 Algorithm Identifiers for si
 
 CREATE TABLE IF NOT EXISTS public_keys (
     id BIGSERIAL PRIMARY KEY,
-    uaid UUID NOT NULL REFERENCES local_actors (uaid),
+    uaid UUID NULL REFERENCES local_actors (uaid),
     pubkey TEXT UNIQUE NOT NULL,
     UNIQUE (uaid, pubkey),
     algorithm_identifier INT NOT NULL REFERENCES algorithm_identifiers (id) ON DELETE CASCADE
@@ -21,8 +21,8 @@ CREATE TABLE IF NOT EXISTS idcsr (
     id BIGSERIAL PRIMARY KEY,
     serial_number NUMERIC(49, 0) UNIQUE NOT NULL,
     uaid UUID NOT NULL REFERENCES local_actors (uaid) ON DELETE CASCADE,
-    actor_public_key_id BIGINT UNIQUE NOT NULL REFERENCES public_keys (id) ON DELETE CASCADE,
-    actor_signature TEXT UNIQUE NOT NULL,
+    subject_public_key_id BIGINT UNIQUE NOT NULL REFERENCES public_keys (id) ON DELETE CASCADE,
+    subject_signature TEXT UNIQUE NOT NULL,
     session_id VARCHAR(32) NOT NULL,
     valid_not_before TIMESTAMP NULL,
     valid_not_after TIMESTAMP NULL,
