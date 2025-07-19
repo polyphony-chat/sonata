@@ -2,18 +2,24 @@ use chrono::NaiveDateTime;
 use log::error;
 use polyproto::{
 	certs::{PublicKeyInfo, idcert::IdCert},
+	der::Encode,
 	key::PublicKey,
 	signature::Signature,
 	types::DomainName,
 };
 use sqlx::query;
 
-use crate::{database::Database, errors::Error};
+use crate::{
+	database::{AlgorithmIdentifier, Database},
+	errors::{Context, Error},
+};
 
 pub(crate) struct HomeServerCert;
 
 impl HomeServerCert {
-	/// TODO documentme
+	/// Try to get a [HomeServerCert] from the database, filtered by the
+	/// [DomainName] and a [NaiveDateTime] timestamp, at which the certificate
+	/// must be valid.
 	pub(crate) async fn get_idcert_by<S: Signature, P: PublicKey<S>>(
 		db: &Database,
 		issuer_domain_name: &DomainName,
@@ -74,6 +80,42 @@ impl HomeServerCert {
 			Error::new_internal_error(None)
 		})
 		.map(Some)
+	}
+
+	///
+	pub(crate) async fn insert_idcert_unchecked<S: Signature, P: PublicKey<S>>(
+		db: &Database,
+		cert: IdCert<S, P>,
+	) -> Result<(), Error> {
+		let oid_signature_algo = S::algorithm_identifier().oid;
+		let params_signature_algo = match S::algorithm_identifier().parameters {
+			Some(params) => params.to_der().map_err(|e| {
+				error!("Error encoding signature algorithm parameters to DER: {e}");
+				Error::new_internal_error(None)
+			})?,
+			None => Vec::new(),
+		};
+		let Some(algorithm_identifier) = AlgorithmIdentifier::get_by(
+			db,
+			None,
+			None,
+			Some(&oid_signature_algo),
+			&params_signature_algo,
+		)
+		.await?
+		.first() else {
+			return Err(Error::new(
+				crate::errors::Errcode::IllegalInput,
+				Some(Context::new(
+					None,
+					None,
+					None,
+					Some("ID-Cert contained cryptographic algorithms not supported by this server"),
+				)),
+			));
+		};
+		cert.id_cert_tbs;
+		todo!()
 	}
 }
 
