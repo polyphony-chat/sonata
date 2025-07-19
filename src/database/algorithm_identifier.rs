@@ -56,6 +56,11 @@ impl AlgorithmIdentifier {
         }
         let parameters_der_encoded_reformatted =
             parameters_der_encoded.into_iter().map(|num| *num as i16).collect::<Vec<_>>();
+        let parameters_for_query = if parameters_der_encoded_reformatted.is_empty() {
+            None
+        } else {
+            Some(parameters_der_encoded_reformatted.as_slice())
+        };
         let record = query!(
             r#"
             SELECT id, algorithm_identifier, common_name, parameters_der_encoded
@@ -64,12 +69,12 @@ impl AlgorithmIdentifier {
                 ($1::int IS NULL OR id = $1)
                 AND ($2::text IS NULL OR algorithm_identifier = $2)
                 AND ($3::text IS NULL OR common_name = $3)
-                AND ($4::smallint [] IS NULL OR parameters_der_encoded = $4)
+                AND ($4::smallint [] IS NULL OR parameters_der_encoded = $4 OR (parameters_der_encoded IS NULL AND $4::smallint [] = '{}'))
             "#,
             id,
             algorithm_identifier.map(|a| a.to_string()),
             common_name,
-            &parameters_der_encoded_reformatted,
+            parameters_for_query,
         )
         .fetch_all(&db.pool)
         .await?;

@@ -2,7 +2,7 @@
 -- Contains data for testing HomeServerCert::get_idcert_by method
 
 -- Algorithm identifiers including ED25519
-INSERT INTO algorithm_identifiers (id, algorithm_identifier, common_name, parameters) VALUES
+INSERT INTO algorithm_identifiers (id, algorithm_identifier, common_name, parameters_der_encoded) VALUES
 (1, 'rsaEncryption', 'RSA', NULL),
 (2, 'id-ecPublicKey', 'EC', NULL),
 (3, '1.3.101.112', 'Edwards-curve Digital Signature Algorithm (EdDSA) Ed25519', NULL);

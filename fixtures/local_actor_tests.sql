@@ -2,7 +2,7 @@
 -- This builds on the basic actor setup and adds specific test data for LocalActor methods
 
 -- Algorithm identifiers for public keys (needed for actor setup)
-INSERT INTO algorithm_identifiers (id, algorithm_identifier, common_name, parameters) VALUES
+INSERT INTO algorithm_identifiers (id, algorithm_identifier, common_name, parameters_der_encoded) VALUES
 (1, 'rsaEncryption', 'RSA', NULL),
 (2, 'id-ecPublicKey', 'EC', NULL);
 

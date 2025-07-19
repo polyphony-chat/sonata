@@ -2,7 +2,7 @@
 -- Contains common database setup that can be reused across multiple test scenarios
 
 -- Algorithm identifiers for public keys
-INSERT INTO algorithm_identifiers (id, algorithm_identifier, common_name, parameters) VALUES
+INSERT INTO algorithm_identifiers (id, algorithm_identifier, common_name, parameters_der_encoded) VALUES
 (1, 'rsaEncryption', 'RSA', NULL),
 (2, 'id-ecPublicKey', 'EC', NULL);
 
