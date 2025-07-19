@@ -1,9 +1,13 @@
-use polyproto::{key::PublicKey, signature::Signature};
+use log::error;
+use polyproto::{der::Encode, key::PublicKey, signature::Signature};
 use sqlx::{query, types::Uuid};
 
 use crate::{
     database::{AlgorithmIdentifier, Database},
-    errors::Error,
+    errors::{
+        ALGORITHM_IDENTIFER_TO_DER_ERROR_MESSAGE, CONTAINS_UNKNOWN_CRYPTO_ALGOS_ERROR_MESSAGE,
+        Context, Errcode, Error,
+    },
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -72,16 +76,57 @@ impl PublicKeyInfo {
             .collect())
     }
 
+    ///
     pub(crate) async fn insert<S: Signature, P: PublicKey<S>>(
         db: &Database,
         public_key: &P,
+        uaid: Option<Uuid>,
     ) -> Result<Self, Error> {
         let public_key_algo = public_key.algorithm_identifier();
+        let public_key_info = hex::encode(
+            public_key.public_key_info().public_key_bitstring.to_der().map_err(|e| {
+                error!("{ALGORITHM_IDENTIFER_TO_DER_ERROR_MESSAGE}: {e}");
+                Error::new_internal_error(None)
+            })?,
+        );
         let Some(algorithm_identifiers_row) =
             AlgorithmIdentifier::get_by_algorithm_identifier(db, &public_key_algo).await?
         else {
-            todo!()
+            error!("Public Key {CONTAINS_UNKNOWN_CRYPTO_ALGOS_ERROR_MESSAGE}");
+            return Err(Error::new_internal_error(None));
         };
-        todo!()
+        let result = query!(
+            r#"
+            INSERT INTO public_keys (uaid, pubkey, algorithm_identifier)
+            VALUES ($1, $2, $3)
+            RETURNING id
+        "#,
+            uaid,
+            public_key_info,
+            algorithm_identifiers_row.id()
+        )
+        .fetch_optional(&db.pool)
+        .await?;
+        // Actually not fully sure of the semantics here: If there is a duplicate, will
+        // this throw an error, or will it just return None?
+        match result {
+            Some(record) => Ok(Self {
+                id: record.id,
+                uaid,
+                pubkey: public_key_info,
+                algorithm_identifier: algorithm_identifiers_row.id(),
+            }),
+            None => Err(Error::new(
+                Errcode::IllegalInput,
+                Some(Context::new(
+                    None,
+                    None,
+                    None,
+                    Some(
+                        "Either this public key already has been stored, or the requested user does not exist",
+                    ),
+                )),
+            )),
+        }
     }
 }
