@@ -76,7 +76,30 @@ impl PublicKeyInfo {
             .collect())
     }
 
+    /// Insert a public key into the `public_keys` table.
     ///
+    /// This function extracts algorithm information from the provided public
+    /// key, verifies that the cryptographic algorithm is supported by the
+    /// server, and inserts the public key information into the database.
+    ///
+    /// ## Parameters
+    ///
+    /// - `db` - Database connection reference
+    /// - `public_key` - The public key to insert
+    /// - `uaid` - Optional user actor ID to associate with the public key
+    ///
+    /// ## Returns
+    ///
+    /// Returns the created [PublicKeyInfo] instance on success.
+    ///
+    /// ## Errors
+    ///
+    /// The function will error if:
+    ///
+    /// - The public key uses an unsupported cryptographic algorithm
+    /// - The public key already exists in the database
+    /// - The associated user does not exist (when UAID is provided)
+    /// - Database connection or operation fails
     pub(crate) async fn insert<S: Signature, P: PublicKey<S>>(
         db: &Database,
         public_key: &P,

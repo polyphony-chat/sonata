@@ -82,7 +82,22 @@ impl HomeServerCert {
         .map(Some)
     }
 
+    /// Insert an [IdCert] into the database without performing validation
+    /// checks.
     ///
+    /// This function bypasses certificate validation and directly inserts the
+    /// certificate into the database. It extracts the signature algorithm
+    /// information from the certificate and ensures it's supported by the
+    /// server before insertion.
+    ///
+    /// # Parameters
+    /// * `db` - Database connection reference
+    /// * `cert` - The [IdCert] to insert into the database
+    ///
+    /// # Returns
+    /// * `Ok(())` if the certificate was successfully inserted
+    /// * `Err(Error)` if the signature algorithm is unsupported or insertion
+    ///   fails
     pub(crate) async fn insert_idcert_unchecked<S: Signature, P: PublicKey<S>>(
         db: &Database,
         cert: IdCert<S, P>,
