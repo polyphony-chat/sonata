@@ -8,13 +8,21 @@ use crate::{
 	errors::{Context, Error},
 };
 
+/// Represents an issuer row in the database table with the same name.
 pub(crate) struct Issuer {
-	pub(crate) id: i64,
+	/// ID of this issuer
+	id: i64,
 	pub(crate) domain_components: DomainName,
 }
 
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl Issuer {
+	/// Read-only access to the inner ID field, referencing the ID column in the
+	/// database table.
+	pub(crate) fn id(&self) -> i64 {
+		self.id
+	}
+
 	/// Create (insert) the issuer entry for this sonata instance.
 	pub(crate) async fn create_own(db: &Database) -> Result<Option<Self>, Error> {
 		let config_domain = &SonataConfig::get_or_panic().general.server_domain;
