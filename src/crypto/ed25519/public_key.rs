@@ -4,8 +4,10 @@ use polyproto::{der::asn1::BitString, key::PublicKey, signature::Signature};
 use crate::crypto::ed25519::DigitalSignature;
 
 #[derive(PartialEq, Eq, Clone, Debug)]
+/// `ed25519` public key
 pub(crate) struct DigitalPublicKey {
-	key: VerifyingKey,
+	/// The public key
+	pub(crate) key: VerifyingKey,
 }
 
 #[cfg_attr(coverage_nightly, coverage(off))]
