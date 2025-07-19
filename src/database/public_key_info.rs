@@ -79,7 +79,9 @@ impl PublicKeyInfo {
         let public_key_algo = public_key.algorithm_identifier();
         let Some(algorithm_identifiers_row) =
             AlgorithmIdentifier::get_by_algorithm_identifier(db, &public_key_algo).await?
-        else {};
+        else {
+            todo!()
+        };
         todo!()
     }
 }

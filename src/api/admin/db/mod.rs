@@ -6,28 +6,28 @@ use rand::{Rng, distr::Alphanumeric};
 use sqlx::{query_as, types::Uuid};
 
 use crate::{
-	database::{Database, Invite},
-	errors::Error,
+    database::{Database, Invite},
+    errors::Error,
 };
 
 /// Create an invite.
 #[cfg_attr(coverage_nightly, coverage(off))]
 pub(super) async fn create_invite(
-	owner: Option<&Uuid>,
-	code: Option<&str>,
-	uses_max: i32,
-	db: &Database,
+    owner: Option<&Uuid>,
+    code: Option<&str>,
+    uses_max: i32,
+    db: &Database,
 ) -> Result<Invite, Error> {
-	let code = {
-		if let Some(code) = code {
-			code
-		} else {
-			&rand::rng().sample_iter(&Alphanumeric).take(16).map(char::from).collect::<String>()
-		}
-	};
-	Ok(query_as!(
-		Invite,
-		"INSERT INTO invite_links
+    let code = {
+        if let Some(code) = code {
+            code
+        } else {
+            &rand::rng().sample_iter(&Alphanumeric).take(16).map(char::from).collect::<String>()
+        }
+    };
+    Ok(query_as!(
+        Invite,
+        "INSERT INTO invite_links
         (
             invite_link_owner,
             usages_current, usages_maximum,
@@ -41,11 +41,11 @@ pub(super) async fn create_invite(
             usages_maximum,
             invite AS invite_code,
             invalid",
-		owner,
-		uses_max,
-		code,
-		false
-	)
-	.fetch_one(&db.pool)
-	.await?)
+        owner,
+        uses_max,
+        code,
+        false
+    )
+    .fetch_one(&db.pool)
+    .await?)
 }

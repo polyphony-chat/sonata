@@ -10,9 +10,9 @@ pub(crate) use signature::*;
 
 /// Generate a `ed25519` keypair using an [rand_core::OsRng].
 pub(crate) fn generate_keypair() -> (DigitalPrivateKey, DigitalPublicKey) {
-	let signing_key = SigningKey::generate(&mut rand_core::OsRng);
-	let verifying_key = signing_key.verifying_key();
-	let dpuk = DigitalPublicKey { key: verifying_key };
-	let dppk = DigitalPrivateKey { key: signing_key, pubkey: dpuk.clone() };
-	(dppk, dpuk)
+    let signing_key = SigningKey::generate(&mut rand_core::OsRng);
+    let verifying_key = signing_key.verifying_key();
+    let dpuk = DigitalPublicKey { key: verifying_key };
+    let dppk = DigitalPrivateKey { key: signing_key, pubkey: dpuk.clone() };
+    (dppk, dpuk)
 }

@@ -1,0 +1,43 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT id, uaid, pubkey, algorithm_identifier\n            FROM public_keys\n            WHERE\n                ($1::int IS NULL OR id = $1)\n                AND ($2::uuid IS NULL OR uaid = $2)\n                AND ($3::text IS NULL OR pubkey = $3)\n                AND ($4::int IS NULL OR algorithm_identifier = $4)\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "uaid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "pubkey",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "algorithm_identifier",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Uuid",
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "e237af1073cf4a9e21833deccc5acdced42ba4c96d4fa79f92727faab7cb3210"
+}

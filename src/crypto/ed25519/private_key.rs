@@ -7,22 +7,22 @@ use crate::crypto::ed25519::{DigitalPublicKey, DigitalSignature};
 /// `ed25519` private key, also containing information about the corresponding
 /// public key.
 pub(crate) struct DigitalPrivateKey {
-	/// The private key
-	pub(crate) key: SigningKey,
-	/// The corresponding public key
-	pub(crate) pubkey: DigitalPublicKey,
+    /// The private key
+    pub(crate) key: SigningKey,
+    /// The corresponding public key
+    pub(crate) pubkey: DigitalPublicKey,
 }
 
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl PrivateKey<DigitalSignature> for DigitalPrivateKey {
-	type PublicKey = DigitalPublicKey;
+    type PublicKey = DigitalPublicKey;
 
-	fn pubkey(&self) -> &Self::PublicKey {
-		&self.pubkey
-	}
+    fn pubkey(&self) -> &Self::PublicKey {
+        &self.pubkey
+    }
 
-	fn sign(&self, data: &[u8]) -> DigitalSignature {
-		let signature = self.key.sign(data);
-		DigitalSignature { signature }
-	}
+    fn sign(&self, data: &[u8]) -> DigitalSignature {
+        let signature = self.key.sign(data);
+        DigitalSignature { signature }
+    }
 }
