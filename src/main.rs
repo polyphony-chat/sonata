@@ -53,6 +53,17 @@ use crate::{
 
 #[tokio::main]
 #[cfg_attr(coverage_nightly, coverage(off))]
+/// The main method.
+///
+/// Other than just starting the server, the main method also must do the
+/// following:
+///
+/// 1. Ensure that at least one valid API key exists in the database on startup
+/// 2. Parse the [SonataConfig] and initialize it globally.
+/// 3. Connect to the Database, run pending migrations and provide a connection.
+/// 4. Inserting the own [AlgorithmIdentifier] and [Issuer] into the respective
+///    database tables.
+/// 5. Initialize the [TokenStore].
 async fn main() -> StdResult<()> {
     use crate::{cli::Args, config::SonataConfig, database::Database};
     _ = Args::parse(); // Has to be done, else clap doesn't work correctly.
