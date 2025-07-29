@@ -1,5 +1,5 @@
 use chrono::NaiveDateTime;
-use log::error;
+use log::{debug, error};
 use polyproto::{
     certs::{PublicKeyInfo, idcert::IdCert},
     der::Encode,
@@ -10,7 +10,7 @@ use polyproto::{
 use sqlx::query;
 
 use crate::{
-    database::{AlgorithmIdentifier, Database, Issuer},
+    database::{AlgorithmIdentifier, Database, Issuer, SerialNumber},
     errors::{ALGORITHM_IDENTIFER_TO_DER_ERROR_MESSAGE, Context, Error},
 };
 
@@ -82,23 +82,34 @@ impl HomeServerCert {
         .map(Some)
     }
 
-    /// Insert an [IdCert] into the database without performing validation
-    /// checks.
+    /// Insert an [IdCert] into the database without performing __any__
+    /// validation checks.
     ///
     /// This function bypasses certificate validation and directly inserts the
     /// certificate into the database. It extracts the signature algorithm
     /// information from the certificate and ensures it's supported by the
     /// server before insertion.
     ///
-    /// # Parameters
-    /// * `db` - Database connection reference
-    /// * `cert` - The [IdCert] to insert into the database
+    /// ## ⚠️ Warning ⚠️
     ///
-    /// # Returns
+    /// **Never** use this function standalone, without any additional
+    /// verification. At least the following things must be ensured, before
+    /// calling this function:
+    ///
+    /// 1. The entity trying to perform the INSERT operation is who they say
+    ///    they are, and are permitted to perform the operation
+    /// 2. The [IdCert] is valid and well-formed.
+    ///
+    /// Calling this function without proper verification will likely enable an
+    /// attack vector enabling hostile takeover of actor accounts or the entire
+    /// home server altogether. The method exists purely to be used in
+    /// conjunction with those steps.
+    ///
+    /// ## Returns
     /// * `Ok(())` if the certificate was successfully inserted
     /// * `Err(Error)` if the signature algorithm is unsupported or insertion
     ///   fails
-    pub(crate) async fn insert_idcert_unchecked<S: Signature, P: PublicKey<S>>(
+    pub(super) async fn insert_idcert_unchecked<S: Signature, P: PublicKey<S>>(
         db: &Database,
         cert: IdCert<S, P>,
     ) -> Result<(), Error> {
@@ -135,6 +146,26 @@ impl HomeServerCert {
 		let issuer = Issuer::get_own(db).await?.expect(
 			"The issuer entry for this sonata instance should have been added to the database on startup!",
 		);
+        let cert_serial = SerialNumber::from(cert.id_cert_tbs.serial_number);
+        if query!(
+            "SELECT serial_number FROM idcsr WHERE serial_number = $1",
+            cert_serial.as_bigdecimal()
+        )
+        .fetch_optional(&db.pool)
+        .await?
+        .is_some()
+        {
+            debug!(
+                "ID-Cert with serial_number {} already exists; aborting",
+                cert_serial.as_bigdecimal()
+            );
+            return Err(Error::new_duplicate_error(Some(&format!(
+                "An ID-Cert with serial number {} already exists",
+                cert_serial.as_bigdecimal()
+            ))));
+        };
+        // TODO: get pem_encoded string of cert and then I think we can actually insert
+        // it into the DB!
         todo!()
     }
 }
