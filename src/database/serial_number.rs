@@ -1,6 +1,9 @@
 use bigdecimal::num_bigint::BigUint;
+use log::error;
 use rand::TryRngCore;
-use sqlx::{Decode, Encode, Postgres, Type, types::BigDecimal};
+use sqlx::{Decode, Encode, Postgres, Type, query, types::BigDecimal};
+
+use crate::{database::Database, errors::Error};
 
 // TODO: This could be in polyproto instead
 
@@ -9,6 +12,48 @@ use sqlx::{Decode, Encode, Postgres, Type, types::BigDecimal};
 pub struct SerialNumber(BigDecimal);
 
 impl SerialNumber {
+    /// Tries to generate a [SerialNumber] which does not yet exist in the
+    /// `idcsr` table and its' `serial_number` column.
+    ///
+    /// Calls [Self::try_generate_random] internally.
+    ///
+    /// ## Errors
+    ///
+    /// Will error, if:
+    ///
+    /// - The [ThreadRng] fails to generate randomness. Depending on the
+    ///   implementation of `ThreadRng`, this method may cause a panic in these
+    ///   cases.
+    /// - The database or database connection is unavailable for any reason.
+    pub(crate) async fn try_generate_unique_random(
+        db: &Database,
+        rng: &mut rand::rngs::ThreadRng,
+    ) -> Result<Self, Error> {
+        let mut serial_number =
+            SerialNumber::try_generate_random(&mut rand::rng()).map_err(|e| {
+                error!("Error while trying to generate serial_number: {e}");
+                Error::new_internal_error(None)
+            })?;
+        while (query!(
+            "
+                SELECT serial_number
+                FROM idcsr
+                WHERE serial_number = $1
+            ",
+            serial_number.as_bigdecimal()
+        )
+        .fetch_optional(&db.pool)
+        .await?)
+            .is_some()
+        {
+            serial_number = SerialNumber::try_generate_random(rng).map_err(|e| {
+                error!("Error while trying to generate serial_number: {e}");
+                Error::new_internal_error(None)
+            })?;
+        }
+        Ok(serial_number)
+    }
+
     /// From a [ThreadRng], get 20 octets (160 bits) of entropy and construct a
     /// serial number out of it.
     ///
