@@ -1,5 +1,7 @@
+use std::fmt::Debug;
+
 use chrono::NaiveDateTime;
-use log::{debug, error};
+use log::{debug, error, warn};
 use polyproto::{
     certs::{PublicKeyInfo, idcert::IdCert},
     der::Encode,
@@ -7,7 +9,7 @@ use polyproto::{
     signature::Signature,
     types::DomainName,
 };
-use sqlx::query;
+use sqlx::{query, types::Uuid};
 
 use crate::{
     database::{AlgorithmIdentifier, Database, Issuer, SerialNumber},
@@ -109,9 +111,10 @@ impl HomeServerCert {
     /// * `Ok(())` if the certificate was successfully inserted
     /// * `Err(Error)` if the signature algorithm is unsupported or insertion
     ///   fails
-    pub(super) async fn insert_idcert_unchecked<S: Signature, P: PublicKey<S>>(
+    pub(super) async fn insert_idcert_unchecked<S: Signature + Debug, P: PublicKey<S> + Debug>(
         db: &Database,
         cert: IdCert<S, P>,
+        uaid: Option<&Uuid>,
     ) -> Result<(), Error> {
         let oid_signature_algo = S::algorithm_identifier().oid;
         let params_signature_algo = match S::algorithm_identifier().parameters {
@@ -146,7 +149,57 @@ impl HomeServerCert {
 		let issuer = Issuer::get_own(db).await?.expect(
 			"The issuer entry for this sonata instance should have been added to the database on startup!",
 		);
-        let cert_serial = SerialNumber::from(cert.id_cert_tbs.serial_number);
+        let subject_public_key_pem = cert.id_cert_tbs.subject_public_key.public_key_info().to_pem(polyproto::der::pem::LineEnding::LF).map_err(|e| {
+             debug!("Received a public key which triggered an error when trying to convert it into PEM. Error: {e}; Public Key: {:?}", cert.id_cert_tbs.subject_public_key);
+            Error::new(crate::errors::Errcode::IllegalInput, Some(Context::new(None, None, None, Some("Public Key could not be converted to PEM representation"))))
+        })?;
+        let subject_key_algorithm_identifier =
+            match AlgorithmIdentifier::get_by_algorithm_identifier(
+                db,
+                &cert.id_cert_tbs.signature_algorithm,
+            )
+            .await?
+            {
+                Some(algo) => algo,
+                None => {
+                    return Err(Error::new(
+                        crate::errors::Errcode::IllegalInput,
+                        Some(Context::new(
+                            None,
+                            None,
+                            None,
+                            Some(
+                                "ID-Cert contains cryptographic algorithms not supported by this server",
+                            ),
+                        )),
+                    ));
+                }
+            };
+        let subject_public_keys = super::PublicKeyInfo::get_by(
+            db,
+            uaid.cloned(),
+            Some(subject_public_key_pem),
+            Some(subject_key_algorithm_identifier.id()),
+            None,
+        )
+        .await?;
+        let subject_public_key = match subject_public_keys.len() {
+            0 => {
+                return Err(Error::new(
+                    crate::errors::Errcode::IllegalInput,
+                    Some(Context::new_message("Your public key is not known by this server.")),
+                ));
+            }
+            1 => subject_public_keys[0],
+            _ => {
+                warn!(
+                    "Subject public key with PEM encoding {} has multiple matching entries in the database",
+                    subject_public_key_pem
+                );
+                return Err(Error::new_internal_error(None));
+            }
+        };
+        let cert_serial = SerialNumber::from(cert.id_cert_tbs.serial_number.clone());
         if query!(
             "SELECT serial_number FROM idcsr WHERE serial_number = $1",
             cert_serial.as_bigdecimal()
@@ -164,6 +217,14 @@ impl HomeServerCert {
                 cert_serial.as_bigdecimal()
             ))));
         };
+        let pem_encoded = cert.clone().to_pem(polyproto::der::pem::LineEnding::LF).map_err(|e| {
+            debug!("Received a certificate which triggered an error when trying to convert it into PEM. Error: {e}; Certificate: {cert:?}");
+            Error::new(crate::errors::Errcode::IllegalInput, Some(Context::new(None, None, None, Some("Certificate could not be converted to PEM representation"))))
+        })?;
+        cert.id_cert_tbs.subject; // TODO WE NEED THE SUBJECT;
+        let record = query!("
+        INSERT INTO idcsr (serial_number, uaid, subject_public_key_id, subject_signature, session_id, valid_not_before, valid_not_after, extensions, pem_encoded) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING idcsr
+        ", cert_serial, uaid, subject_public_key.id(), cert.signature.as_hex(), );
         // TODO: get pem_encoded string of cert and then I think we can actually insert
         // it into the DB!
         todo!()

@@ -244,6 +244,11 @@ impl Context {
             message: message.map(String::from).unwrap_or_default(),
         }
     }
+
+    /// Creates [Self], with only the `message` field being `Some`.
+    pub fn new_message(message: &str) -> Self {
+        Self::new(None, None, None, Some(message))
+    }
 }
 
 #[cfg(test)]

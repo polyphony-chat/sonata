@@ -20,7 +20,7 @@ COMMENT ON TABLE public_keys IS 'Public keys of both actors, cached actors and h
 CREATE TABLE IF NOT EXISTS idcsr (
     id bigserial PRIMARY KEY,
     serial_number numeric(49, 0) UNIQUE NOT NULL,
-    uaid uuid NOT NULL REFERENCES local_actors (uaid) ON DELETE CASCADE,
+    uaid uuid NULL REFERENCES local_actors (uaid) ON DELETE CASCADE,
     subject_public_key_id bigint UNIQUE NOT NULL REFERENCES public_keys (id) ON DELETE CASCADE,
     subject_signature text UNIQUE NOT NULL,
     session_id varchar(32) NOT NULL,
