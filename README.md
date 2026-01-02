@@ -3,9 +3,12 @@
 >
 > We have moved to [Codeberg](https://codeberg.org/polyphony) as our primary Git Forge, and the project is *alive and well* over there! :purple_heart: The GitHub repositories will be archived and potentially deleted in the future.
 
+
+<details>
+  <summary>Old README (outdated!)</summary>
+
 [![Coverage Status](https://coveralls.io/repos/github/polyphony-chat/sonata/badge.svg?branch=main)](https://coveralls.io/github/polyphony-chat/sonata?branch=main)
 [![FAQ-shield]][FAQ]
-[![Discord]][Discord-invite]
 <img src="https://img.shields.io/static/v1?label=Status&message=Early%20Development&color=blue">
 
 # sonata
@@ -122,9 +125,6 @@ This project is licensed under the Mozilla Public License 2.0. See the [LICENSE]
 - **Email**: Contact us at [info@polyphony.chat](mailto:info@polyphony.chat)
 - **IRC**: See [our FAQ at the "IRC" section](https://github.com/polyphony-chat/.github/blob/main/FAQ.md#irc) for information on how to connect.
 
-
-[Discord]: https://dcbadge.limes.pink/api/server/m3FpcapGDD?style=flat
-<!-- [Discord]: https://img.shields.io/badge/Discord-bf63f7.svg?style=flat&logo=discord&logoColor=white-->
-[Discord-invite]: https://discord.com/invite/m3FpcapGDD
 [FAQ-shield]: https://img.shields.io/badge/Frequently_Asked_Questions_(FAQ)-ff62bd
-[FAQ]: https://github.com/polyphony-chat/.github/blob/main/FAQ.md
+
+</details>
